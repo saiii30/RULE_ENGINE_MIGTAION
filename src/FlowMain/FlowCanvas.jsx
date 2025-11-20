@@ -1,13 +1,20 @@
 import React from "react";
 import { observer } from "mobx-react";
-import Swal from "sweetalert2";
 import Store from "../Store";
-import { FaEdit, FaTrash, FaPlus, FaGripVertical } from "react-icons/fa";
+import Swal from "sweetalert2";
+import {
+  FaEdit,
+  FaTrash,
+  FaGripVertical,
+  FaPlus,
+  FaChevronDown,
+  FaChevronRight,
+} from "react-icons/fa";
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -15,13 +22,182 @@ import {
 import {
   arrayMove,
   SortableContext,
+  verticalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const SortableRow = ({ id, children }) => {
+
+
+// ============================
+// Sortable group wrapper
+// ============================
+const SortableTableGroup = ({
+  id,
+  engines,
+  isDragging,
+  collapsed,
+  onToggleCollapse,
+  onEditRuleId,
+  onDeleteGroup,
+  children,
+  // handlers for per-row actions (used for single-row rendering)
+  onEditRule,
+  onDeleteRule,
+  onQuickAddRule,
+}) => {
+  // This sortable is for the group-level dragging
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition:
+      transition || "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 999 : "auto",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`transition-all duration-300 ${isDragging ? "ring-4 ring-blue-500 ring-opacity-40" : ""}`}
+    >
+      <div className="bg-white rounded-lg overflow-hidden shadow-md mb-4">
+        {/* GROUP HEADER — ONLY FOR 2+ ROWS */}
+        {engines.length > 1 && (
+          <div
+            className="rule-row bg-gray-100 font-semibold text-gray-700 border-b border-gray-300"
+            style={{
+              gridTemplateColumns:
+                "40px 200px 120px 120px 180px 180px 180px 100px 120px",
+            }}
+          >
+            {/* Column 1: group drag handle */}
+            <div className="flex items-center justify-center">
+              <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 transition"
+                title="Drag Group"
+              >
+                <FaGripVertical className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Column 2..8: TITLE cell spanning the middle columns (ConditionSetId..Flag) */}
+            <div
+              style={{
+                gridColumn: "2 / 9", // spans columns 2..8 inclusive
+              }}
+              className="flex items-center pl-4"
+            >
+              Rule Group: {id}
+            </div>
+
+            {/* Column 9: Actions (collapse / edit / delete) */}
+            <div className="flex items-center gap-3 justify-center">
+              <button
+                onClick={() => onEditRuleId(id)}
+                className="text-blue-600 hover:text-blue-800"
+                title="Edit RuleId"
+              >
+                <FaEdit />
+              </button>
+
+              <button
+                onClick={() => onDeleteGroup(id)}
+                className="text-red-600 hover:text-red-800 p-2"
+                title="Delete Group"
+              >
+                <FaTrash />
+              </button>
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 rounded hover:bg-gray-200 transition"
+                title={collapsed ? "Expand group" : "Collapse group"}
+              >
+                {collapsed ? <FaChevronRight /> : <FaChevronDown />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* CHILDREN ROWS OR SINGLE-ROW RENDERED USING GROUP ATTRS */}
+        {!collapsed && (
+          <>
+            {engines.length > 1 ? (
+              // For multi-row groups, use the provided children (which contains nested DndContext/SortableContext)
+              children
+            ) : (
+              // SINGLE ROW: render row here so we can attach the GROUP sortable attributes/listeners
+              (() => {
+                const { engine, rowData } = engines[0];
+                return (
+                  <div
+                    className="rule-row"
+                    style={{
+                      gridTemplateColumns:
+                        "40px 200px 120px 120px 180px 180px 180px 100px 120px",
+                    }}
+                  >
+                    {/* Column 1: drag handle that uses GROUP attributes/listeners */}
+                    <div className="flex items-center justify-center">
+                      <button
+                        {...attributes}
+                        {...listeners}
+                        className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 transition"
+                        title="Drag Group (single row)"
+                      >
+                        <FaGripVertical className="text-gray-600" />
+                      </button>
+                    </div>
+
+                    {/* Column 2..8: data cells */}
+                    <div className="text-left pl-4">
+                      {rowData.ConditionSetId || "-"}
+                    </div>
+                    <div>{rowData.RuleId || "-"}</div>
+                    <div>{rowData.ConditionId || "-"}</div>
+                    <div>{rowData.SelectAttribute || "-"}</div>
+                    <div>{rowData.Condition || "-"}</div>
+                    <div>{rowData.SelectValue || "-"}</div>
+                    <div>{rowData.Flag ? "True" : "False"}</div>
+
+                    {/* Column 9: actions */}
+                    <div className="flex justify-center gap-2">
+                      <button
+                        onClick={() => onEditRule(engine.id)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit Rule"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => onDeleteRule(engine.id)}
+                        className="text-red-600 hover:text-red-800 p-2"
+                        title="Delete Rule"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============================
+// Sortable Row Component
+// ============================
+const SortableRow = ({ id, children, showHandle = true }) => {
   const {
     attributes,
     listeners,
@@ -33,119 +209,62 @@ const SortableRow = ({ id, children }) => {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 200ms cubic-bezier(0.25, 0.1, 0.25, 1)',
-    opacity: isDragging ? 0.4 : 1,
-    backgroundColor: isDragging ? '#f0f9ff' : 'transparent',
-    boxShadow: isDragging 
-      ? '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 20px 25px -5px rgba(59, 130, 246, 0.2)' 
-      : 'none',
-    scale: isDragging ? '1.02' : '1',
-    zIndex: isDragging ? 999 : 'auto',
-    position: 'relative',
+    transition: transition || "transform 250ms ease",
+    background: isDragging ? "#f8fafc" : "white",
+    opacity: isDragging ? 0.95 : 1,
+    boxShadow: isDragging ? "0 6px 18px rgba(0,0,0,0.08)" : "none",
   };
 
+  // If showHandle === false, attach draggable handlers to the whole row (so the row can be dragged by anywhere)
+  const rowProps = !showHandle ? { ...attributes, ...listeners } : {};
+
   return (
-    <tr 
-      ref={setNodeRef} 
-      style={style} 
-      className={`
-        sortable-row
-        hover:bg-gray-50 
-        transition-all 
-        duration-200 
-        ${isDragging ? 'ring-2 ring-blue-400 ring-opacity-50 drag-row-active' : ''}
-      `}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rule-row"
+      {...rowProps}
     >
-      <td className="px-3 py-2 border text-center">
-        <div className="flex justify-center items-center">
-          <button
-            {...attributes}
-            {...listeners}
-            className={`
-              cursor-grab 
-              active:cursor-grabbing 
-              transition-all 
-              duration-200 
-              p-2 
-              rounded 
-              ${isDragging 
-                ? 'text-blue-600 bg-blue-100 scale-110' 
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-              }
-            `}
-          >
-            <FaGripVertical />
-          </button>
+      {showHandle ? (
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing flex justify-center items-center"
+        >
+          <FaGripVertical className="text-gray-600" />
         </div>
-      </td>
+      ) : (
+        <div className="flex justify-center items-center">
+          {/* empty placeholder to keep first column size consistent */}
+        </div>
+      )}
+
       {children}
-    </tr>
+    </div>
   );
 };
 
-const SortableTableGroup = ({ id, children, isDragging }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)',
-    opacity: isDragging ? 0.5 : 1,
-    scale: isDragging ? '0.98' : '1',
-    zIndex: isDragging ? 1000 : 'auto',
-  };
-
-  return (
-    <React.Fragment>
-      <tr 
-        ref={setNodeRef} 
-        style={style}
-        className={`
-          bg-blue-100 shadow-lg 
-          transition-all duration-300
-          ${isDragging ? 'ring-4 ring-blue-500 ring-opacity-50' : ''}
-        `}
-      >
-        <td colSpan={1} className="px-3 py-2 border text-center">
-          <button
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-2 rounded hover:bg-blue-200 transition-all"
-          >
-            <FaGripVertical className="text-blue-600" />
-          </button>
-        </td>
-        <td colSpan={8} className="px-3 py-2 border text-left font-semibold">
-          {children}
-        </td>
-      </tr>
-    </React.Fragment>
-  );
-};
-
+// ============================
+// Main Component
+// ============================
 const FlowCanvas = observer(() => {
   const [activeId, setActiveId] = React.useState(null);
   const [activeGroupId, setActiveGroupId] = React.useState(null);
   const [ruleIdOrder, setRuleIdOrder] = React.useState([]);
+  const [collapsedGroups, setCollapsedGroups] = React.useState({});
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // 🧠 Group all engines by RuleId (same RuleId = same table)
+  // Group engines by RuleId
   const groupedByRuleId = {};
   Store.engines.forEach((engine) => {
     const nodes = engine.nodes
       .map((id) => Store.nodes.find((n) => n.id === id))
       .filter(Boolean);
+
     const rowData = {};
     nodes.forEach((node) => (rowData[node.data.label] = node.data.value));
 
@@ -154,57 +273,78 @@ const FlowCanvas = observer(() => {
     groupedByRuleId[ruleId].push({ engine, rowData });
   });
 
-  // Initialize ruleIdOrder if empty
   React.useEffect(() => {
     const currentRuleIds = Object.keys(groupedByRuleId);
-    if (ruleIdOrder.length === 0 || 
-        currentRuleIds.length !== ruleIdOrder.length ||
-        !currentRuleIds.every(id => ruleIdOrder.includes(id))) {
+    if (
+      ruleIdOrder.length === 0 ||
+      currentRuleIds.length !== ruleIdOrder.length ||
+      !currentRuleIds.every((id) => ruleIdOrder.includes(id))
+    ) {
       setRuleIdOrder(currentRuleIds);
     }
-  }, [Object.keys(groupedByRuleId).join(',')]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Object.keys(groupedByRuleId).join(",")]);
 
-  // Sort groups by ruleIdOrder
-  const orderedRuleIds = ruleIdOrder.filter(id => groupedByRuleId[id]);
+  const orderedRuleIds = ruleIdOrder.filter((id) => groupedByRuleId[id]);
 
-  const handleDragStart = (event) => {
-    setActiveId(event.active.id);
+  // Collapse
+  const toggleGroupCollapse = (ruleId) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [ruleId]: !prev[ruleId],
+    }));
   };
 
-  const handleDragEnd = (event, ruleId) => {
+  // Drag Helpers
+  const getRuleIdForEngine = (engine) => {
+    for (const nodeId of engine.nodes) {
+      const node = Store.nodes.find((n) => n.id === nodeId);
+      if (node?.data.label === "RuleId") return node.data.value;
+    }
+    return "Unassigned";
+  };
+
+  const handleDragStart = (event) => setActiveId(event.active.id);
+  const handleDragCancel = () => setActiveId(null);
+  const handleGroupDragStart = (event) => setActiveGroupId(event.active.id);
+  const handleGroupDragCancel = () => setActiveGroupId(null);
+
+  const handleDragEnd = (event) => {
     const { active, over } = event;
+    if (!over || active.id === over.id) {
+      setActiveId(null);
+      return;
+    }
 
-    if (over && active.id !== over.id) {
-      const engines = groupedByRuleId[ruleId];
-      const oldIndex = engines.findIndex((e) => e.engine.id === active.id);
-      const newIndex = engines.findIndex((e) => e.engine.id === over.id);
+    const activeEngineIndex = Store.engines.findIndex((e) => e.id === active.id);
+    const overEngineIndex = Store.engines.findIndex((e) => e.id === over.id);
+    if (activeEngineIndex === -1 || overEngineIndex === -1) {
+      setActiveId(null);
+      return;
+    }
 
-      // Get all engine IDs in current order
-      const allEngineIds = Store.engines.map((e) => e.id);
-      
-      // Get the actual indices in the Store.engines array
-      const storeOldIndex = allEngineIds.indexOf(active.id);
-      const storeNewIndex = allEngineIds.indexOf(over.id);
+    const activeRuleId = getRuleIdForEngine(Store.engines[activeEngineIndex]);
+    const overRuleId = getRuleIdForEngine(Store.engines[overEngineIndex]);
 
-      // Reorder in the store
-      const newEngines = arrayMove(Store.engines, storeOldIndex, storeNewIndex);
-      Store.engines = newEngines;
+    if (activeRuleId === overRuleId) {
+      const sameGroupEngines = Store.engines.filter(
+        (e) => getRuleIdForEngine(e) === activeRuleId
+      );
+      const idsInGroup = sameGroupEngines.map((e) => e.id);
+      const oldIndex = idsInGroup.indexOf(active.id);
+      const newIndex = idsInGroup.indexOf(over.id);
+      const reordered = arrayMove(sameGroupEngines, oldIndex, newIndex);
+
+      Store.engines = Store.engines.map((e) =>
+        getRuleIdForEngine(e) === activeRuleId ? reordered.shift() : e
+      );
     }
 
     setActiveId(null);
-  };
-
-  const handleDragCancel = () => {
-    setActiveId(null);
-  };
-
-  const handleGroupDragStart = (event) => {
-    setActiveGroupId(event.active.id);
   };
 
   const handleGroupDragEnd = (event) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
       setRuleIdOrder((items) => {
         const oldIndex = items.indexOf(active.id);
@@ -212,15 +352,67 @@ const FlowCanvas = observer(() => {
         return arrayMove(items, oldIndex, newIndex);
       });
     }
-
     setActiveGroupId(null);
   };
 
-  const handleGroupDragCancel = () => {
-    setActiveGroupId(null);
+  // ===========================
+  // EDIT RULE-ID FOR GROUP
+  // (unchanged from your original behavior)
+  // ===========================
+  const onEditRuleId = (ruleId) => {
+    Swal.fire({
+      title: "Edit RuleId",
+      input: "text",
+      inputValue: ruleId,
+      showCancelButton: true,
+      confirmButtonText: "Update",
+    }).then((res) => {
+      if (!res.value) return;
+
+      const newRuleId = res.value;
+
+      // update all engines in this group
+      Store.engines.forEach((engine) => {
+        engine.nodes.forEach((id) => {
+          const node = Store.nodes.find((n) => n.id === id);
+          if (node?.data.label === "RuleId" && node.data.value === ruleId) {
+            node.data.value = newRuleId;
+          }
+        });
+      });
+
+      // update UI sorting order
+      setRuleIdOrder((prev) =>
+        prev.map((rid) => (rid === ruleId ? newRuleId : rid))
+      );
+    });
   };
 
-  // ✏ Edit Rule (redesigned popup)
+  // ===========================
+  // DELETE GROUP
+  // ===========================
+  const onDeleteGroup = (ruleId) => {
+    Swal.fire({
+      title: "Delete Entire Group?",
+      text: `All rules with RuleId "${ruleId}" will be removed.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      Store.engines = Store.engines.filter((engine) => {
+        return !engine.nodes.some((id) => {
+          const node = Store.nodes.find((n) => n.id === id);
+          return node?.data.label === "RuleId" && node.data.value === ruleId;
+        });
+      });
+
+      setRuleIdOrder((prev) => prev.filter((id) => id !== ruleId));
+    });
+  };
+
+  // Handlers for Edit/Delete/Add - keep your original behavior
   const handleEditRule = async (engId) => {
     const engine = Store.engines.find((e) => e.id === engId);
     if (!engine) return;
@@ -232,10 +424,10 @@ const FlowCanvas = observer(() => {
     });
 
     const { value: formValues } = await Swal.fire({
-      title: '<div style="color: #1e293b; font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Edit Rule</div>',
+      title:
+        '<div style="color: #1e293b; font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Edit Rule</div>',
       html: `
         <div style="padding: 1rem 0.5rem;">
-          <!-- ConditionId Input -->
           <div style="margin-bottom: 1.5rem;">
             <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
               Condition ID
@@ -266,7 +458,7 @@ const FlowCanvas = observer(() => {
               (field) => `
               <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
-                  ${field.replace(/([A-Z])/g, ' $1').trim()}
+                  ${field.replace(/([A-Z])/g, " $1").trim()}
                 </label>
                 <div class="dropdown-container" style="position: relative;">
                   <div 
@@ -289,12 +481,17 @@ const FlowCanvas = observer(() => {
                     onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';"
                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none';"
                   >
-                    <span id="${field}Text" style="color: ${row[field] ? '#1e293b' : '#94a3b8'};">
-                      ${row[field] || `Select ${field.replace(/([A-Z])/g, ' $1').trim()}`}
+                    <span id="${field}Text" style="color: ${
+                row[field] ? "#1e293b" : "#94a3b8"
+              };">
+                      ${
+                        row[field] ||
+                        `Select ${field.replace(/([A-Z])/g, " $1").trim()}`
+                      }
                     </span>
                     <svg 
                       class="dropdown-arrow" 
-                      style="width: 20px; height: 20px; color: #64748b; transition: transform 0.2s ease;"
+                      style="width: 30px; height: 30px; color: #64748b; transition: transform 0.2s ease;"
                       xmlns="http://www.w3.org/2000/svg" 
                       viewBox="0 0 24 24" 
                       fill="none" 
@@ -325,7 +522,13 @@ const FlowCanvas = observer(() => {
                     ${(field === "SelectAttribute"
                       ? ["Age", "Salary", "Country", "Gender"]
                       : field === "Condition"
-                      ? ["equals", "not equals", "greater than", "less than", "contains"]
+                      ? [
+                          "equals",
+                          "not equals",
+                          "greater than",
+                          "less than",
+                          "contains",
+                        ]
                       : ["10", "20", "30", "True", "False"]
                     )
                       .map(
@@ -345,7 +548,7 @@ const FlowCanvas = observer(() => {
                           onmouseout="this.style.background='transparent'; this.style.borderLeftColor='transparent'; this.style.color='#334155';"
                         >
                           ${v}
-                        </div>`
+                        </div>` 
                       )
                       .join("")}
                   </div>
@@ -354,8 +557,7 @@ const FlowCanvas = observer(() => {
             )
             .join("")}
 
-          <!-- Flag Toggle -->
-          <div style="margin-top: 1.5rem;">
+           <div style="margin-top: 1.5rem;">
             <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem; text-align: left;">
               Flag Status
             </label>
@@ -417,9 +619,68 @@ const FlowCanvas = observer(() => {
               </span>
             </div>
           </div>
-        </div>
 
+      
         <style>
+        .swal-custom-popup {
+          border-radius: 1rem !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .swal-confirm-btn {
+          background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
+          color: white !important;
+          border: none !important;
+          border-radius: 0.75rem !important;
+          padding: 0.75rem 2rem !important;
+          font-size: 0.9375rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3) !important;
+        }
+
+        .swal-confirm-btn:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4) !important;
+        }
+
+        .swal-confirm-btn-danger {
+          background: linear-gradient(135deg, #e11b1bff 0%, #f87171 100%) !important;
+          color: white !important;
+          border: none !important;
+          border-radius: 0.75rem !important;
+          padding: 0.75rem 2rem !important;
+          font-size: 0.9375rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 4px 6px -1px rgba(242, 65, 65, 0.3) !important;
+        }
+
+        .swal-confirm-btn-danger:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4) !important;
+        }
+
+        .swal-cancel-btn {
+          background: white !important;
+          color: #64748b !important;
+          border: 2px solid #e2e8f0 !important;
+          border-radius: 0.75rem !important;
+          padding: 0.75rem 2rem !important;
+          font-size: 0.9375rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          margin-right: 0.75rem !important;
+        }
+
+        .swal-cancel-btn:hover {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+          color: #475569 !important;
+        }
           @keyframes slideDown {
             from {
               opacity: 0;
@@ -456,7 +717,8 @@ const FlowCanvas = observer(() => {
           .dropdown-list::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
           }
-        </style>
+
+        </styl>
       `,
       didOpen: () => {
         const dropdowns = ["SelectAttribute", "Condition", "SelectValue"];
@@ -469,24 +731,40 @@ const FlowCanvas = observer(() => {
           trigger?.addEventListener("click", (e) => {
             e.stopPropagation();
             const isOpen = list?.style.display === "block";
-            document.querySelectorAll(".dropdown-list").forEach((el) => (el.style.display = "none"));
-            document.querySelectorAll(".dropdown-arrow").forEach((a) => (a.style.transform = "rotate(0deg)"));
+            document
+              .querySelectorAll(".dropdown-list")
+              .forEach((el) => (el.style.display = "none"));
+            document
+              .querySelectorAll(".dropdown-arrow")
+              .forEach((a) => (a.style.transform = "rotate(0deg)"));
             if (list) list.style.display = isOpen ? "none" : "block";
-            if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+            if (arrow)
+              arrow.style.transform = isOpen
+                ? "rotate(0deg)"
+                : "rotate(180deg)";
           });
 
           list?.querySelectorAll(".dropdown-option").forEach((opt) => {
             opt.addEventListener("click", () => {
               if (text) text.textContent = opt.textContent || "";
               if (text) text.style.color = "#1e293b";
-              if (trigger) trigger.setAttribute("data-value", opt.getAttribute("data-value") || "");
+              if (trigger)
+                trigger.setAttribute(
+                  "data-value",
+                  opt.getAttribute("data-value") || ""
+                );
               if (list) list.style.display = "none";
               if (arrow) arrow.style.transform = "rotate(0deg)";
             });
           });
 
           document.addEventListener("click", (e) => {
-            if (trigger && list && !trigger.contains(e.target) && !list.contains(e.target)) {
+            if (
+              trigger &&
+              list &&
+              !trigger.contains(e.target) &&
+              !list.contains(e.target)
+            ) {
               list.style.display = "none";
               if (arrow) arrow.style.transform = "rotate(0deg)";
             }
@@ -505,14 +783,23 @@ const FlowCanvas = observer(() => {
       preConfirm: () => ({
         ConditionId: document.getElementById("condId")?.value || "",
         SelectAttribute:
-          document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
-          document.getElementById("SelectAttributeText")?.textContent?.trim() || "",
+          document
+            .getElementById("SelectAttributeTrigger")
+            ?.getAttribute("data-value") ||
+          document.getElementById("SelectAttributeText")?.textContent?.trim() ||
+          "",
         Condition:
-          document.getElementById("ConditionTrigger")?.getAttribute("data-value") ||
-          document.getElementById("ConditionText")?.textContent?.trim() || "",
+          document
+            .getElementById("ConditionTrigger")
+            ?.getAttribute("data-value") ||
+          document.getElementById("ConditionText")?.textContent?.trim() ||
+          "",
         SelectValue:
-          document.getElementById("SelectValueTrigger")?.getAttribute("data-value") ||
-          document.getElementById("SelectValueText")?.textContent?.trim() || "",
+          document
+            .getElementById("SelectValueTrigger")
+            ?.getAttribute("data-value") ||
+          document.getElementById("SelectValueText")?.textContent?.trim() ||
+          "",
         Flag: document.getElementById("flagSwitch")?.checked ? "True" : "False",
       }),
       showCancelButton: true,
@@ -563,11 +850,10 @@ const FlowCanvas = observer(() => {
     }
   };
 
-  // ➕ Quick Add Rule (no popup)
   const handleQuickAddRule = (ruleId) => {
     const newEngineId = `engine_${Date.now()}`;
     const newEngine = { id: newEngineId, nodes: [] };
-    
+
     const defaultValues = {
       ConditionSetId: `CS_${Date.now()}`,
       RuleId: ruleId,
@@ -577,7 +863,7 @@ const FlowCanvas = observer(() => {
       SelectValue: "",
       Flag: "False",
     };
-    
+
     Object.keys(defaultValues).forEach((label) => {
       const newNodeId = `${label}_${Date.now()}_${Math.random()}`;
       const newNode = {
@@ -593,7 +879,6 @@ const FlowCanvas = observer(() => {
     Store.engines.push(newEngine);
   };
 
-  // 🗑 Delete Rule
   const handleDeleteRule = (engId) => {
     Swal.fire({
       title: "Are you sure?",
@@ -624,171 +909,99 @@ const FlowCanvas = observer(() => {
     });
   };
 
+  // ===========================
+  // UI Rendering
+  // ===========================
   return (
     <>
       <style>{`
-        .swal-custom-popup {
-          border-radius: 1rem !important;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        .rule-header,
+        .rule-row {
+          display: grid;
+          grid-template-columns:
+            40px 200px 120px 120px 180px 180px 180px 100px 120px;
+          align-items: center;
+          text-align: center;
         }
-
-        .swal-confirm-btn {
-          background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
-          color: white !important;
-          border: none !important;
-          border-radius: 0.75rem !important;
-          padding: 0.75rem 2rem !important;
-          font-size: 0.9375rem !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.2s ease !important;
-          box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3) !important;
+        .rule-header {
+          position: sticky;
+          top: 0;
+          background-color: #0a1b44;
+          color: white;
+          font-weight: 600;
+          height: 50px;
+          border-radius: 6px;
+          z-index: 50;
+          padding: 0 8px;
         }
-
-        .swal-confirm-btn:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4) !important;
+        .rule-row {
+          background-color: white;
+          border-bottom: 1px solid #e6e6e6;
+          height: 50px;
+          border-radius: 3px;
+          padding: 0 10px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
-
-        .swal-confirm-btn-danger {
-          background: linear-gradient(135deg, #ef4444 0%, #f87171 100%) !important;
-          color: white !important;
-          border: none !important;
-          border-radius: 0.75rem !important;
-          padding: 0.75rem 2rem !important;
-          font-size: 0.9375rem !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.2s ease !important;
-          box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3) !important;
-        }
-
-        .swal-confirm-btn-danger:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4) !important;
-        }
-
-        .swal-cancel-btn {
-          background: white !important;
-          color: #64748b !important;
-          border: 2px solid #e2e8f0 !important;
-          border-radius: 0.75rem !important;
-          padding: 0.75rem 2rem !important;
-          font-size: 0.9375rem !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.2s ease !important;
-          margin-right: 0.75rem !important;
-        }
-
-        .swal-cancel-btn:hover {
-          background: #f8fafc !important;
-          border-color: #cbd5e1 !important;
-          color: #475569 !important;
-        }
-
-        /* Enhanced drag and drop animations */
-        @keyframes dragPulse {
-          0%, 100% {
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(59, 130, 246, 0.5);
-          }
-          50% {
-            box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(59, 130, 246, 0.7);
-          }
-        }
-
-        @keyframes rowHighlight {
-          0% {
-            background-color: transparent;
-          }
-          50% {
-            background-color: rgba(219, 234, 254, 0.5);
-          }
-          100% {
-            background-color: transparent;
-          }
-        }
-
-        .drag-row-active {
-          animation: dragPulse 2s ease-in-out infinite;
-        }
-
-        tr.sortable-row {
-          transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-
-        tr.sortable-row:hover {
-          background-color: rgba(249, 250, 251, 1);
-          transform: translateX(2px);
-        }
+        /* small visual adjustment so actions icons sit nicely */
+        .rule-row > div:last-child { padding-right: 12px; }
       `}</style>
 
       <div className="p-6 w-full h-full bg-background flex flex-col gap-6">
-        <h2 className="text-lg font-semibold text-foreground">Rules & Groups</h2>
+        <h2 className="text-lg font-semibold text-foreground">
+          Rules & Groups
+        </h2>
 
-        <div className="overflow-x-auto overflow-y-auto max-h-[500px] relative border rounded-lg p-3">
-          <table className="w-full border-collapse table-fixed">
-            <thead
-              className="text-foreground"
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 50,
-                backgroundColor: "#2563eb",
-                color: "#fff",
-              }}
-            >
-              <tr>
-                <th className="px-3 py-2 border font-medium text-sm text-center w-16">
-                  Order
-                </th>
-                {[
-                  "ConditionSetId",
-                  "RuleId",
-                  "ConditionId",
-                  "SelectAttribute",
-                  "Condition",
-                  "SelectValue",
-                  "Flag",
-                  "Actions",
-                ].map((col) => (
-                  <th
-                    key={col}
-                    className="px-3 py-2 border font-medium text-sm text-center"
+        <div className="rule-header mb-2">
+          <div></div>
+          <div className="text-left pl-4">ConditionSetId</div>
+          <div>RuleId</div>
+          <div>ConditionId</div>
+          <div>SelectAttribute</div>
+          <div>Condition</div>
+          <div>SelectValue</div>
+          <div>Flag</div>
+          <div>Actions</div>
+        </div>
+
+        {/* GROUP DRAG CONTEXT */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleGroupDragStart}
+          onDragEnd={handleGroupDragEnd}
+          onDragCancel={handleGroupDragCancel}
+        >
+          <SortableContext
+            items={orderedRuleIds}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-6">
+              {orderedRuleIds.map((ruleId) => {
+                const engines = groupedByRuleId[ruleId];
+                const collapsed = collapsedGroups[ruleId] || false;
+
+                return (
+                  <SortableTableGroup
+                    key={ruleId}
+                    id={ruleId}
+                    engines={engines}
+                    isDragging={activeGroupId === ruleId}
+                    collapsed={collapsed}
+                    onToggleCollapse={() => toggleGroupCollapse(ruleId)}
+                    onEditRuleId={onEditRuleId}
+                    onDeleteGroup={onDeleteGroup}
+                    onEditRule={handleEditRule}
+                    onDeleteRule={handleDeleteRule}
+                    onQuickAddRule={handleQuickAddRule}
                   >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleGroupDragStart}
-              onDragEnd={handleGroupDragEnd}
-              onDragCancel={handleGroupDragCancel}
-            >
-              <SortableContext
-                items={orderedRuleIds}
-                strategy={verticalListSortingStrategy}
-              >
-                <tbody>
-                  {orderedRuleIds.map((ruleId) => {
-                    const engines = groupedByRuleId[ruleId];
-                    return (
-                      <React.Fragment key={ruleId}>
-                        <SortableTableGroup 
-                          id={ruleId} 
-                          isDragging={activeGroupId === ruleId}
-                        >
-                          Rule Group: {ruleId}
-                        </SortableTableGroup>
+                    <>
+                      {engines.length > 1 ? (
+                        // MULTI-ROW: show title row (group header) and rows under it
                         <DndContext
                           sensors={sensors}
                           collisionDetection={closestCenter}
                           onDragStart={handleDragStart}
-                          onDragEnd={(event) => handleDragEnd(event, ruleId)}
+                          onDragEnd={handleDragEnd}
                           onDragCancel={handleDragCancel}
                         >
                           <SortableContext
@@ -796,143 +1009,75 @@ const FlowCanvas = observer(() => {
                             strategy={verticalListSortingStrategy}
                           >
                             {engines.map(({ engine, rowData }, index) => (
-                              <SortableRow key={engine.id} id={engine.id}>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.ConditionSetId || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.RuleId || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.ConditionId || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.SelectAttribute || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.Condition || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.SelectValue || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  {rowData.Flag || "-"}
-                                </td>
-                                <td className="px-3 py-2 border text-center">
-                                  <div className="flex justify-center gap-3">
+                              <SortableRow key={engine.id} id={engine.id} showHandle={true}>
+                                <div className="text-left pl-4">{rowData.ConditionSetId || "-"}</div>
+                                <div>{rowData.RuleId || "-"}</div>
+                                <div>{rowData.ConditionId || "-"}</div>
+                                <div>{rowData.SelectAttribute || "-"}</div>
+                                <div>{rowData.Condition || "-"}</div>
+                                <div>{rowData.SelectValue || "-"}</div>
+                                <div>{rowData.Flag ? "True" : "False"}</div>
+                                <div className="flex justify-center gap-2">
+                                  <button
+                                    onClick={() => handleEditRule(engine.id)}
+                                    className="text-blue-600 hover:text-blue-800"
+                                    title="Edit Rule"
+                                  >
+                                    <FaEdit />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteRule(engine.id)}
+                                    className="text-red-600 hover:text-red-800 p-2"
+                                    title="Delete Rule"
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                  {index === engines.length - 1 && (
                                     <button
-                                      onClick={() => handleEditRule(engine.id)}
-                                      className="text-blue-600 hover:text-blue-800"
-                                      title="Edit Rule"
+                                      onClick={() => handleQuickAddRule(ruleId)}
+                                      className="text-green-600 hover:text-green-800"
+                                      title="Quick Add"
                                     >
-                                      <FaEdit />
+                                      <FaPlus />
                                     </button>
-                                    <button
-                                      onClick={() => handleDeleteRule(engine.id)}
-                                      className="text-red-600 hover:text-red-800"
-                                      title="Delete Rule"
-                                    >
-                                      <FaTrash />
-                                    </button>
-                                    {index === engines.length - 1 && engines.length > 1 && (
-                                      <button
-                                        onClick={() => handleQuickAddRule(ruleId)}
-                                        className="text-green-600 hover:text-green-800"
-                                        title="Add New Rule"
-                                      >
-                                        <FaPlus />
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
+                                  )}
+                                </div>
                               </SortableRow>
                             ))}
                           </SortableContext>
-                          <DragOverlay
-                            dropAnimation={{
-                              duration: 300,
-                              easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
-                            }}
-                          >
-                            {activeId ? (
-                              <table className="w-full border-collapse">
-                                <tbody>
-                                  <tr 
-                                    className="bg-blue-50 animate-pulse"
-                                    style={{
-                                      boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(59, 130, 246, 0.5)',
-                                      transform: 'rotate(-2deg)',
-                                    }}
-                                  >
-                                    <td className="px-3 py-2 border text-center bg-blue-100">
-                                      <div className="flex justify-center items-center">
-                                        <FaGripVertical className="text-blue-600" />
-                                      </div>
-                                    </td>
-                                    {(() => {
-                                      const engine = Store.engines.find((e) => e.engine?.id === activeId || e.id === activeId);
-                                      if (!engine) return null;
-                                      
-                                      const engineData = engine.engine || engine;
-                                      const nodes = engineData.nodes
-                                        ?.map((id) => Store.nodes.find((n) => n.id === id))
-                                        .filter(Boolean) || [];
-                                      
-                                      const rowData = {};
-                                      nodes.forEach((node) => (rowData[node.data.label] = node.data.value));
-
-                                      return (
-                                        <>
-                                          <td className="px-3 py-2 border text-center">{rowData.ConditionSetId || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">{rowData.RuleId || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">{rowData.ConditionId || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">{rowData.SelectAttribute || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">{rowData.Condition || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">{rowData.SelectValue || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">{rowData.Flag || "-"}</td>
-                                          <td className="px-3 py-2 border text-center">
-                                            <div className="flex justify-center gap-3 opacity-50">
-                                              <FaEdit className="text-blue-600" />
-                                              <FaTrash className="text-red-600" />
-                                            </div>
-                                          </td>
-                                        </>
-                                      );
-                                    })()}
-                                  </tr>
-                                </tbody>
-                              </table>
-                            ) : null}
-                          </DragOverlay>
                         </DndContext>
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </SortableContext>
-              <DragOverlay
-                dropAnimation={{
-                  duration: 400,
-                  easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
-                }}
-              >
-                {activeGroupId ? (
-                  <div 
-                    className="bg-blue-200 p-4 rounded-lg shadow-2xl ring-4 ring-blue-500"
-                    style={{
-                      transform: 'rotate(-3deg) scale(1.05)',
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <FaGripVertical className="text-blue-600 text-xl" />
-                      <span className="font-bold text-lg">Rule Group: {activeGroupId}</span>
-                    </div>
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          </table>
-        </div>
+                      ) : (
+                       null
+                      )}
+                    </>
+                  </SortableTableGroup>
+                );
+              })}
+            </div>
+          </SortableContext>
+
+          <DragOverlay>
+            {/* Group overlay (when dragging groups) */}
+            {activeGroupId ? (
+              <div className="bg-white rounded-lg p-4 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <FaGripVertical className="text-blue-600 text-xl" />
+                  <span className="font-bold text-lg">Rule Group: {activeGroupId}</span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Row overlay (when dragging a row) */}
+            {activeId && !activeGroupId ? (
+              <div className="bg-white rounded-md p-3 shadow-md">
+                <div className="flex items-center gap-2">
+                  <FaGripVertical className="text-gray-700" />
+                  <span>{activeId}</span>
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
     </>
   );
