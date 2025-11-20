@@ -1,0 +1,59 @@
+.swal-custom-popup {
+          border-radius: 1rem !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .swal-confirm-btn {
+          background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
+          color: white !important;
+          border: none !important;
+          border-radius: 0.75rem !important;
+          padding: 0.75rem 2rem !important;
+          font-size: 0.9375rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3) !important;
+        }
+
+        .swal-confirm-btn:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4) !important;
+        }
+
+        .swal-confirm-btn-danger {
+          background: linear-gradient(135deg, #ef4444 0%, #f87171 100%) !important;
+          color: white !important;
+          border: none !important;
+          border-radius: 0.75rem !important;
+          padding: 0.75rem 2rem !important;
+          font-size: 0.9375rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .swal-confirm-btn-danger:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4) !important;
+        }
+
+        .swal-cancel-btn {
+          background: white !important;
+          color: #64748b !important;
+          border: 2px solid #e2e8f0 !important;
+          border-radius: 0.75rem !important;
+          padding: 0.75rem 2rem !important;
+          font-size: 0.9375rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          margin-right: 0.75rem !important;
+        }
+
+        .swal-cancel-btn:hover {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+          color: #475569 !important;
+        }

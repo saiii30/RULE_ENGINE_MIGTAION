@@ -69,7 +69,7 @@ const FlowDiagram = observer(() => {
           marginTop:"auto",
           marginBottom:"auto",
           alignItems: "center",
-          padding:"30px",
+          padding:"19px",
           borderRadius: 8,
         }}
       >
