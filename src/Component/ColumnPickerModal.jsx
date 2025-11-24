@@ -1,6 +1,9 @@
 import React from "react";
+import Store from "../Store";
 const ColumnPickerModal = ({ open, columns, onClose, onSelect }) => {
   if (!open) return null;
+
+  
   return (
     <div
   className="fixed inset-0 flex items-center justify-center"
@@ -20,11 +23,11 @@ const ColumnPickerModal = ({ open, columns, onClose, onSelect }) => {
     style={{ zIndex: 10000 }} // ✅ inner box above backdrop
   >
     <h3 className="text-lg mb-2">Select Column</h3>
-    {columns.length === 0 ? (
+    {Store.columns.length === 0 ? (
       <div className="text-sm text-gray-500">No columns found.</div>
     ) : (
       <ul>
-        {columns.map((col, idx) => (
+        {Store.columns.map((col, idx) => (
           <li
             key={idx}
             className="p-2 cursor-pointer hover:bg-gray-200"

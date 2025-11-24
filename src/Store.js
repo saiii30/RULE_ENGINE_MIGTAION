@@ -21,6 +21,10 @@ const Store = observable({
   isLoggedIn: false,
   loginError: "",
   user: null,
+  selectedAttribute: "",
+  selectedArray : [],
+  selectedCondition: "",
+  selectedValue: "",
 
   async login() {
     try {
@@ -242,7 +246,7 @@ setfontcolours12: action((id) => {
   // ================================
   tablenames: [],       // collections from backend
   explorer: [],         // [{ id, name, type: 'collection'|'column', children: [] }]
-  
+  columns:[],
   // fetch all collections from backend
   async fetchCollections() {
     try {
@@ -286,6 +290,7 @@ setfontcolours12: action((id) => {
     Store.activeCollection = collectionName;
 }),
 
+select :"",
 
   deleteNode(id) {
     const remove = (arr) => {
@@ -426,6 +431,7 @@ deleteNode(id) {
   remove(this.explorer);
 },
 
+pop : "",
 
 ////////////////rule group popup///////
 ruleGroupPicker: {
@@ -576,6 +582,7 @@ createRuleEngineNodes(choice, collectionName,groupNameInput = null) {
 //////for new ruleid req////////
 let ruleName;
 
+
 if (choice === "group") {
   // Creating a new named group
   const enteredName = (groupNameInput || "").trim();
@@ -723,6 +730,7 @@ if (groupName) {
 
   const createdNodeIds = [];
   const createdEdgeIds = [];
+  
 
   labels.forEach((label, index) => {
     // assign node value line for ConditionSetId / RuleId

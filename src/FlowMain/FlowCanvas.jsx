@@ -2,6 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import Store from "../Store";
 import Swal from "sweetalert2";
+import { useEffect } from "react";
 import {
   FaEdit,
   FaTrash,
@@ -58,6 +59,24 @@ const SortableTableGroup = ({
     opacity: isDragging ? 0.6 : 1,
     zIndex: isDragging ? 999 : "auto",
   };
+
+  useEffect(() => {
+  if (!Store.selectedAttribute) return;
+
+  const field = encodeURIComponent(Store.selectedAttribute);
+
+  fetch(`http://localhost:4000/values/${field}`)
+    .then((res) => res.json())
+    .then((result) => {
+      let arr = [];
+
+      if (Array.isArray(result)) arr = result;
+      else if (result?.values) arr = result.values;
+
+      Store.selectedArray = arr;
+    })
+}, [Store.selectedAttribute]);
+
 
   return (
     <div
@@ -520,7 +539,7 @@ const FlowCanvas = observer(() => {
                     "
                   >
                     ${(field === "SelectAttribute"
-                      ? ["Age", "Salary", "Country", "Gender"]
+                      ? Store.columns
                       : field === "Condition"
                       ? [
                           "equals",
@@ -529,7 +548,7 @@ const FlowCanvas = observer(() => {
                           "less than",
                           "contains",
                         ]
-                      : ["10", "20", "30", "True", "False"]
+                      : Store.selectedArray
                     )
                       .map(
                         (v) => `
@@ -721,65 +740,183 @@ const FlowCanvas = observer(() => {
         </styl>
       `,
       didOpen: () => {
-        const dropdowns = ["SelectAttribute", "Condition", "SelectValue"];
-        dropdowns.forEach((field) => {
-          const trigger = document.getElementById(`${field}Trigger`);
-          const list = document.getElementById(`${field}List`);
-          const text = document.getElementById(`${field}Text`);
-          const arrow = trigger?.querySelector(".dropdown-arrow");
+      const dropdowns = ["SelectAttribute", "Condition", "SelectValue"];
+      dropdowns.forEach((field) => {
+        const trigger = document.getElementById(`${field}Trigger`);
+        const list = document.getElementById(`${field}List`);
+        const text = document.getElementById(`${field}Text`);
+        const arrow = trigger?.querySelector(".dropdown-arrow");
 
-          trigger?.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const isOpen = list?.style.display === "block";
-            document
-              .querySelectorAll(".dropdown-list")
-              .forEach((el) => (el.style.display = "none"));
-            document
-              .querySelectorAll(".dropdown-arrow")
-              .forEach((a) => (a.style.transform = "rotate(0deg)"));
-            if (list) list.style.display = isOpen ? "none" : "block";
-            if (arrow)
-              arrow.style.transform = isOpen
-                ? "rotate(0deg)"
-                : "rotate(180deg)";
-          });
+       trigger?.addEventListener("click", async (e) => {
+  e.stopPropagation();
 
-          list?.querySelectorAll(".dropdown-option").forEach((opt) => {
-            opt.addEventListener("click", () => {
-              if (text) text.textContent = opt.textContent || "";
-              if (text) text.style.color = "#1e293b";
-              if (trigger)
-                trigger.setAttribute(
-                  "data-value",
-                  opt.getAttribute("data-value") || ""
-                );
-              if (list) list.style.display = "none";
-              if (arrow) arrow.style.transform = "rotate(0deg)";
-            });
-          });
+  // Open/Close dropdown logic
+  const isOpen = list?.style.display === "block";
+  document.querySelectorAll(".dropdown-list").forEach((el) => (el.style.display = "none"));
+  document.querySelectorAll(".dropdown-arrow").forEach((a) => (a.style.transform = "rotate(0deg)"));
+  if (list) list.style.display = isOpen ? "none" : "block";
+  if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
 
-          document.addEventListener("click", (e) => {
-            if (
-              trigger &&
-              list &&
-              !trigger.contains(e.target) &&
-              !list.contains(e.target)
-            ) {
-              list.style.display = "none";
-              if (arrow) arrow.style.transform = "rotate(0deg)";
-            }
+  // ⭐⭐ IMPORTANT LOGIC STARTS HERE ⭐⭐
+ if (field === "SelectValue" && !isOpen) {
+  alert("SelectValue dropdown opened!");
+
+
+  
+
+
+  
+
+  let selectedAttr =
+    document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") || "";
+
+ if (!selectedAttr) {
+    const engine = Store.engines.find((eng) => eng.id === engId);
+
+    if (engine) {
+      engine.nodes.forEach((id) => {
+        const node = Store.nodes.find((n) => n.id === id);
+
+        if (node?.data.label === "SelectAttribute") {
+          selectedAttr = node.data.value;
+        }
+      });
+    }
+  }
+
+
+
+  // ------------------------------------
+  // 3️⃣ IF STILL EMPTY → CLEAR DROPDOWN
+  // ------------------------------------
+  if (!selectedAttr || selectedAttr.trim() === "") {
+    console.warn("SelectAttribute is EMPTY. Clearing SelectValue dropdown.");
+
+    list.innerHTML = `
+      <div style="padding:10px; color:#94a3b8">
+        No attribute selected
+      </div>
+    `;
+
+    return; // ❌ STOP HERE
+  }
+
+  // ------------------------------------
+  // 4️⃣ VALID attribute → fetch backend
+  // ------------------------------------
+  try {
+    const res = await fetch(`http://localhost:4000/values/${selectedAttr}`);
+    const result = await res.json();
+
+    let arr = [];
+    if (Array.isArray(result)) arr = result;
+    else if (result?.values) arr = result.values;
+
+    Store.selectedArray = arr;
+
+    // ------------------------------------
+    // 5️⃣ RENDER VALUES → DROPDOWN
+    // ------------------------------------
+    if (arr.length === 0) {
+      list.innerHTML = `
+        <div style="padding:10px; color:#94a3b8">
+          No values found
+        </div>
+      `;
+    } else {
+      list.innerHTML = arr
+        .map(
+          (v) => `
+            <div class="dropdown-option"
+              data-value="${v}"
+              style="padding:.75rem 1rem; cursor:pointer; color:#334155">
+              ${v}
+            </div>
+          `
+        )
+        .join("");
+    }
+
+  // try {
+  //   // ⭐ WAIT FOR BACKEND RESPONSE ⭐
+  //   const res = await fetch(`http://localhost:4000/values/${selectedAttr}`);
+  //   const result = await res.json();
+
+  //   let arr = [];
+
+  //   if (Array.isArray(result)) arr = result;
+  //   else if (result?.values) arr = result.values;
+
+  //   // ⭐ UPDATE STORE ⭐
+  //   Store.selectedArray = arr;
+
+  //   console.log("Fetched values:", arr);
+
+  //   // ⭐ RENDER DROPDOWN DYNAMICALLY ⭐
+  //   list.innerHTML = arr
+  //     .map(
+  //       (v) => `
+  //       <div 
+  //         class="dropdown-option"
+  //         data-value="${v}"
+  //         style="
+  //           padding: .75rem 1rem;
+  //           cursor: pointer;
+  //           font-size: 0.9375rem;
+  //           color: #334155;
+  //         "
+  //       >
+  //         ${v}
+  //       </div>
+  //     `
+  //     )
+  //     .join("");
+
+    // ⭐ RE-ATTACH EVENTS ⭐
+    list.querySelectorAll(".dropdown-option").forEach((opt) => {
+      opt.addEventListener("click", () => {
+        text.textContent = opt.textContent || "";
+        trigger.setAttribute("data-value", opt.getAttribute("data-value"));
+        list.style.display = "none";
+        arrow.style.transform = "rotate(0deg)";
+      });
+    });
+  } catch (err) {
+    console.error("Error fetching values:", err);
+  }
+}
+
+  // ⭐⭐ IMPORTANT LOGIC ENDS HERE ⭐⭐
+});
+
+
+        list?.querySelectorAll(".dropdown-option").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            if (text) text.textContent = opt.textContent || "";
+            if (text) text.style.color = "#1e293b";
+            if (trigger) trigger.setAttribute("data-value", opt.getAttribute("data-value") || "");
+            if (list) list.style.display = "none";
+            if (arrow) arrow.style.transform = "rotate(0deg)";
           });
         });
 
-        const flagSwitch = document.getElementById("flagSwitch");
-        const flagLabel = document.getElementById("flagLabel");
-        flagSwitch?.addEventListener("change", () => {
-          if (flagLabel) {
-            flagLabel.textContent = flagSwitch.checked ? "True" : "False";
-            flagLabel.style.color = flagSwitch.checked ? "#6366f1" : "#64748b";
+        document.addEventListener("click", (e) => {
+          if (trigger && list && !trigger.contains(e.target) && !list.contains(e.target)) {
+            list.style.display = "none";
+            if (arrow) arrow.style.transform = "rotate(0deg)";
           }
         });
-      },
+      });
+
+      const flagSwitch = document.getElementById("flagSwitch");
+      const flagLabel = document.getElementById("flagLabel");
+      flagSwitch?.addEventListener("change", () => {
+        if (flagLabel) {
+          flagLabel.textContent = flagSwitch.checked ? "True" : "False";
+          flagLabel.style.color = flagSwitch.checked ? "#6366f1" : "#64748b";
+        }
+      });
+    },
       preConfirm: () => ({
         ConditionId: document.getElementById("condId")?.value || "",
         SelectAttribute:
@@ -871,6 +1008,7 @@ const FlowCanvas = observer(() => {
         type: "default",
         data: { label, value: defaultValues[label] },
         position: { x: 0, y: 0 },
+         valuesForAttribute: {}
       };
       Store.nodes.push(newNode);
       newEngine.nodes.push(newNodeId);
@@ -946,14 +1084,14 @@ const FlowCanvas = observer(() => {
         .rule-row > div:last-child { padding-right: 12px; }
       `}</style>
 
-      <div className="p-6 w-full h-full bg-background flex flex-col gap-6">
+      <div className="p-6 w-full h-full bg-background flex flex-col gap-6" style={{position : "relative"}}>
         <h2 className="text-lg font-semibold text-foreground">
           Rules & Groups
         </h2>
 
         <div className="rule-header mb-2">
           <div></div>
-          <div className="text-left pl-4">ConditionSetId</div>
+          <div className="text-left ">ConditionSetId</div>
           <div>RuleId</div>
           <div>ConditionId</div>
           <div>SelectAttribute</div>

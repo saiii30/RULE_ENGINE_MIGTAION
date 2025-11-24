@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.use(express.json());
 
 // ✅ Use .env Mongo URI
-const mongoUri = process.env.MONGO_URI;
+const mongoUri = "mongodb://127.0.0.1:27017/employees";
 if (!mongoUri) {
   console.error("❌ MONGO_URI not found in .env");
   process.exit(1);
@@ -51,36 +51,69 @@ app.get("/collections", async (req, res) => {
 
 // Get columns
 app.get("/columns", async (req, res) => {
-  const { collection, field } = req.query;
-  if (!collection) return res.json([]);
-
-  try {
-    if (database.models[collection]) delete database.models[collection];
-
-    const dynamicModel = database.model(
-      collection,
-      new mongoose.Schema({}, { strict: false }),
-      collection
-    );
-
-    const sampleDoc = await dynamicModel.findOne({});
-    if (!sampleDoc) return res.json([]);
-
-    let target = sampleDoc.toObject();
-    if (field && target[field] && typeof target[field] === "object") {
-      target = target[field];
+    
+    const filePath = path.join(__dirname, "Employee.xlsx"); // ✅ make sure file exists
+    if (!fs.existsSync(filePath)) {
+      console.log("Excel file not found!");
+      return;
     }
 
-    const columnNames = Object.keys(target).filter(
-      (key) => key !== "_id" && key !== "__v"
-    );
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
 
-    res.json(columnNames);
+    res.json(headers)
+
+});
+
+const employeeSchema = new mongoose.Schema({
+  EEID : String,
+  "Full Name" : String,
+  "Job Title" : String,
+  "Department" : String,
+  "Annual Salary" : String, 
+  Age : Number,
+  Gender : String,
+  "Hire Date" : String, 
+  Country : String, 
+  "Exit Date" : String, 
+   City : String, 
+   __v : Number
+
+});
+
+
+app.get("/values/:field", async (req, res) => {
+  try {
+    const selected = req.params.field;
+    const decodedField = decodeURIComponent(selected);
+
+    console.log("👉 Requested field:", decodedField);
+
+    // ✅ Make sure the model uses the same database
+    const Employee = database.model("employee", employeeSchema, "employee");
+
+    // ✅ Fetch only that field
+    const docs = await Employee.find({}, { [decodedField]: 1, _id: 0 });
+    console.log("👉 Raw docs sample:", docs.slice(0, 3));
+
+    // ✅ Extract values
+    const values = docs.map((doc) => doc[decodedField]).filter(Boolean);
+
+    // ✅ Remove duplicates
+    const uniqueValues = [...new Set(values)];
+
+    console.log("👉 Extracted values sample:", uniqueValues.slice(0, 5));
+    res.json(uniqueValues);
   } catch (error) {
-    console.error("Error fetching columns:", error);
-    res.json([]);
+    console.error("❌ Error fetching values:", error);
+    res.status(500).json({ message: "Error fetching values" });
   }
 });
+
+
+
 
 // Distinct values
 app.get("/values", async (req, res) => {
@@ -112,28 +145,28 @@ app.get("/values", async (req, res) => {
 const HeaderSchema = new mongoose.Schema({ headers: [String] });
 const HeaderModel = database.model("excels", HeaderSchema);
 
-async function storeHeadersInMongo() {
-  try {
-    const filePath = path.join(__dirname, "employees.xlsx"); // ✅ make sure file exists
-    if (!fs.existsSync(filePath)) {
-      console.log("Excel file not found!");
-      return;
-    }
+// async function storeHeadersInMongo() {
+//   try {
+//     const filePath = path.join(__dirname, "employees.xlsx"); // ✅ make sure file exists
+//     if (!fs.existsSync(filePath)) {
+//       console.log("Excel file not found!");
+//       return;
+//     }
 
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+//     const workbook = XLSX.readFile(filePath);
+//     const sheetName = workbook.SheetNames[0];
+//     const worksheet = workbook.Sheets[sheetName];
+//     const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
 
-    const headerDocument = new HeaderModel({ headers });
-    await headerDocument.save();
+//     const headerDocument = new HeaderModel({ headers });
+//     await headerDocument.save();
 
-    console.log("Headers saved to MongoDB:", headers);
-  } catch (error) {
-    console.error("Error storing headers:", error);
-  }
-}
-storeHeadersInMongo();
+//     console.log("Headers saved to MongoDB:", headers);
+//   } catch (error) {
+//     console.error("Error storing headers:", error);
+//   }
+// }
+// storeHeadersInMongo();
 
 //---------------------------------------------------
 // 🔹 User Authentication

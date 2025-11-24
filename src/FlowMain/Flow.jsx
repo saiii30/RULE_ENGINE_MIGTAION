@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { observer } from "mobx-react";
 import { FaPlus, FaMinus, FaExpandArrowsAlt } from "react-icons/fa";
 import { toJS } from "mobx";
-
+import { useState } from "react";
 import Store from "../Store";
 import Navbar from "../Component/Navbar";
 import FileExplorer from "../Component/FileExplorer";
@@ -11,12 +11,18 @@ import FlowCanvas from "./FlowCanvas";
 
 
 const FlowDiagram = observer(() => {
+
   useEffect(() => {
-    // make sure autosave is running
-    Store.setupAutosave();
-    // try to restore the current dashboard/user save
-    Store.restoreFlow();
-  }, []);
+          fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
+      }, []);
+
+
+
+   const [hoverId, setHoverId] = useState(null);
+   const [selectedNode, setSelectedNode] = useState(null);
+  const [popupOpen, setPopupOpen] = useState(false);
+   const [treeData, setTreeData] = useState([]);
+ 
 
   // fetch collections and show popup
   const Tableselect = async () => {
@@ -24,12 +30,25 @@ const FlowDiagram = observer(() => {
     Store.closeColumnPicker();
     await Store.fetchCollections();
     Store.isSidebarVisible1 = true;
+    Store.pop = "Parent";
+
+
+     
   };
 
   const selectvalue = (name) => {
     Store.tableName = name;
     Store.addCollection(name);
     Store.isSidebarVisible1 = false;
+
+    const newParent = {
+          id: Date.now().toString(),
+          name:  Store.tableName,
+          children: [],
+          isOpen: true,
+          level : 0,
+        };
+        setTreeData([...treeData, newParent]);
     console.log("Selected:", name, "->", toJS(Store.selectedCollections));
   };
 
@@ -37,34 +56,63 @@ const FlowDiagram = observer(() => {
     Store.isSidebarVisible1 = false;
   };
 
+  const handlePopupSelect = (label) => {
+    
+    
+        
+    
+        // Stop adding children to level 2
+        if (selectedNode.level === 2) {
+          return;
+        }
+        
+        const newChild = {
+          id: Date.now().toString(),
+          name: label,
+          children: [],
+          isOpen: true,
+          level: selectedNode.level + 1,
+        };
+    
+        const addChild = (nodes) =>
+          nodes.map((n) => {
+            if (n.id === selectedNode.id) {
+              return { ...n, children: [...n.children, newChild] };
+            }
+            return { ...n, children: addChild(n.children) };
+          });
+    
+        setTreeData(addChild(treeData));
+        Store.isSidebarVisible1 = false;
+      };
+    
+
   return (
-    <div className="w-full h-screen relative">
+    <div className="w-full h-screen " style={{position : "relative"}}>
       {/* Navbar */}
       <Navbar />
 
       {/* layout: left sidebar (18%) + main (rest) */}
-      <div className="flex" >
+      <div style={{display : "flex",width : "100%",position : "relative"}}  >
         {/* Sidebar: narrowed to ~18% */}
-        <div style={{ width: "10%", borderRight: "5px solid #ddd", minWidth: 220 }}>
-          <FileExplorer />
+        <div style={{ width: "15%", borderRight: "5px solid #ddd",padding: "2px" }}>
+
+           
+          <FileExplorer treeData={treeData} setTreeData={setTreeData} setPopupOpen={setPopupOpen} popupOpen={popupOpen} setSelectedNode={setSelectedNode} selectedNode={selectedNode} hoverId={hoverId} setHoverId={setHoverId}/>
         </div>
 
         {/* Main area */}
-        <div style={{ flex: 1, position: "relative", }}>
-          <FlowCanvas />
-        </div>
-      </div>
 
-      {/* Top-right buttons: keep them above the table */}
-      <div
+        <div style={{width : "85%",position : "relative"}}>
+
+        
+
+        <div
         style={{
-          position: "absolute",
-          top: 65,
-          right: 24,
-          zIndex: 9999,
+         
           display: "flex",
           gap: 12,
-        
+          width: "fit-content",
           padding:"10px",
           marginTop:"auto",
           marginBottom:"auto",
@@ -107,6 +155,17 @@ const FlowDiagram = observer(() => {
         </button>
       </div>
 
+        <div style={{ width: "100%",position : "relative"}}>
+          <FlowCanvas />
+        </div>
+
+        </div>
+        
+      </div>
+
+      {/* Top-right buttons: keep them above the table */}
+      
+
       
       {/* popup modal for selecting collections */}
       {Store.isSidebarVisible1 && (
@@ -117,12 +176,14 @@ const FlowDiagram = observer(() => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             background: "#fff",
-            boxShadow: "0 6px 24px rgba(0,0,0,0.2)",
             padding: 20,
             borderRadius: 8,
             zIndex: 2000,
             width: 360,
-            maxHeight: "70vh",
+            height : 300,
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            zIndex: 1000,
             overflowY: "auto",
           }}
         >
@@ -130,7 +191,9 @@ const FlowDiagram = observer(() => {
             ✕
           </button>
 
-          <h3 style={{ marginBottom: 12 }}>Select a Collection</h3>
+          {
+            Store.pop == "Parent" ? <>
+            
 
           <ul style={{ listStyle: "none", padding: 0 }}>
             {(Store.tablenames || []).map((table, idx) => (
@@ -149,6 +212,31 @@ const FlowDiagram = observer(() => {
               </li>
             ))}
           </ul>
+
+            </> : <>
+            <h3 style={{ marginBottom: 12 }}>Select a Collection</h3>
+
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {(Store.columns || []).map((table, idx) => (
+              <li
+                key={idx}
+                onClick={() => handlePopupSelect(table)}
+                
+                style={{
+                  padding: "8px 10px",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  marginBottom: 6,
+                  
+                }}
+              >
+                {table}
+              </li>
+            ))}
+          </ul></>
+          }
+
+          
         </div>
       )}
     </div>

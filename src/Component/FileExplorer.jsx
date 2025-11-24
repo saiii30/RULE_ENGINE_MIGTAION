@@ -5,33 +5,15 @@ import Swal from "sweetalert2";
 
 import Store from "../Store";
 import ExplorerNode from "./ExplorerNode";
-import ColumnPickerModal from "./ColumnPickerModal";
+
 import RuleGroupModal from "./RuleGroupModal";
 
-const FileExplorer = observer(() => {
+const FileExplorer = observer(({treeData,setTreeData,setPopupOpen,popupOpen,setSelectedNode,selectedNode,hoverId,setHoverId}) => {
   return (
-    <div className="file-explorer p-4 text-black">
-      {/* Collections */}
-      {Store.explorer.length === 0 ? (
-        <p className="text-gray-500">No collections selected</p>
-      ) : (
-        <ul className="space-y-2">
-          {Store.explorer.map((n) => (
-            <ExplorerNode key={n.id} node={n} store={Store} />
-          ))}
-        </ul>
-      )}
-
-      {/* Column Picker Modal */}
-      <ColumnPickerModal
-        open={Store.columnPicker.open}
-        loading={Store.columnPicker.loading}
-        error={Store.columnPicker.error}
-        collectionName={Store.columnPicker.forCollectionName}
-        columns={Store.columnPicker.items}
-        onClose={() => Store.closeColumnPicker()}
-        onSelect={(col) => Store.addColumnFromPicker(col)}
-      />
+    <div className=" text-black " style={{position : "relative",width : "100%"}}>
+  
+          
+            <ExplorerNode  store={Store} treeData={treeData} setTreeData={setTreeData} setPopupOpen={setPopupOpen} popupOpen={popupOpen} setSelectedNode={setSelectedNode} selectedNode={selectedNode} hoverId={hoverId} setHoverId={setHoverId}/> 
 
       {/* Rule / Group Modal */}
       <RuleGroupModal
