@@ -46,6 +46,7 @@ const SortableTableGroup = ({
   // handlers for per-row actions (used for single-row rendering)
   onEditRule,
   onDeleteRule,
+  editvalue,
   onQuickAddRule,
 }) => {
   // This sortable is for the group-level dragging
@@ -59,6 +60,8 @@ const SortableTableGroup = ({
     opacity: isDragging ? 0.6 : 1,
     zIndex: isDragging ? 999 : "auto",
   };
+
+  
 
   useEffect(() => {
   if (!Store.selectedAttribute) return;
@@ -119,7 +122,7 @@ const SortableTableGroup = ({
             {/* Column 9: Actions (collapse / edit / delete) */}
             <div className="flex items-center gap-3 justify-center">
               <button
-                onClick={() => onEditRuleId(id)}
+                // onClick={() => onEditRuleId(id)}
                 className="text-blue-600 hover:text-blue-800"
                 title="Edit RuleId"
               >
@@ -175,20 +178,20 @@ const SortableTableGroup = ({
                     </div>
 
                     {/* Column 2..8: data cells */}
-                    <div className="text-left pl-4">
-                      {rowData.ConditionSetId || "-"}
+                    <div className="text-left pl-4" style={{cursor : "pointer"}} >
+                      {rowData.ConditionSetId }
                     </div>
-                    <div>{rowData.RuleId || "-"}</div>
-                    <div>{rowData.ConditionId || "-"}</div>
-                    <div>{rowData.SelectAttribute || "-"}</div>
-                    <div>{rowData.Condition || "-"}</div>
-                    <div>{rowData.SelectValue || "-"}</div>
-                    <div>{rowData.Flag ? "True" : "False"}</div>
+                    <div style={{cursor : "pointer"}}>{rowData.RuleId || "Edit RuleId"}</div>
+                    <div onClick={() => editvalue(engine.id,"ConditionId")} style={{cursor : "pointer"}}>{rowData.ConditionId || "Edit ConditionId"}</div>
+                    <div onClick={() => editvalue(engine.id,"SelectAttribute")} style={{cursor : "pointer"}}>{rowData.SelectAttribute || "Edit SelectAttribute"}</div>
+                    <div onClick={() => editvalue(engine.id,"Condition")} style={{cursor : "pointer"}}>{rowData.Condition || "Edit Condition"}</div>
+                    <div onClick={() => editvalue(engine.id,"SelectValue")} style={{cursor : "pointer"}}>{rowData.SelectValue || "Edit SelectValue"}</div>
+                    <div onClick={() => editvalue(engine.id,"Flag")} style={{cursor : "pointer"}}>{rowData.Flag ? "True" : "False"}</div>
 
                     {/* Column 9: actions */}
                     <div className="flex justify-center gap-2">
                       <button
-                        onClick={() => onEditRule(engine.id)}
+                        // onClick={() => onEditRule(engine.id)}
                         className="text-blue-600 hover:text-blue-800"
                         title="Edit Rule"
                       >
@@ -276,6 +279,496 @@ const FlowCanvas = observer(() => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const popupSections = {
+  ConditionId: (row) => `
+    <div style="padding: 1rem 0.5rem;">
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
+          Condition ID
+        </label>
+        <input 
+          id="condId" 
+          type="text"
+          placeholder="Enter Condition ID" 
+          value="${row.ConditionId || ""}"
+          style="
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 0.9375rem;
+            color: #1e293b;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            outline: none;
+          "
+          onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
+          onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"
+        />
+      </div>
+    </div>
+  `,
+
+  SelectAttribute: (row) => `
+    <div style="padding: 1rem 0.5rem;">
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
+          Select Attribute
+        </label>
+        <div class="dropdown-container" style="position: relative;">
+          <div 
+            class="dropdown-trigger" 
+            id="SelectAttributeTrigger"
+            data-value="${row.SelectAttribute || ""}"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              width: 100%;
+              padding: 0.75rem 1rem;
+              background: linear-gradient(to bottom, #ffffff, #f8fafc);
+              border: 2px solid #e2e8f0;
+              border-radius: 0.75rem;
+              cursor: pointer;
+              font-size: 0.9375rem;
+              color: #1e293b;
+              transition: all 0.2s ease;
+            "
+            onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';"
+            onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+          >
+            <span id="SelectAttributeText" style="color: ${row.SelectAttribute ? '#1e293b' : '#94a3b8'};">
+              ${row.SelectAttribute || 'Select Attribute'}
+            </span>
+            <svg 
+              class="dropdown-arrow" 
+              style="width: 30px; height: 30px; color: #64748b; transition: transform 0.2s ease;"
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+          <div 
+            class="dropdown-list" 
+            id="SelectAttributeList"
+            style="
+              display: none;
+              position: absolute;
+              top: calc(100% + 0.5rem);
+              left: 0;
+              right: 0;
+              background: #ffffff;
+              border: 2px solid #e2e8f0;
+              border-radius: 0.75rem;
+              box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+              z-index: 9999;
+              max-height: 240px;
+              overflow-y: auto;
+              animation: slideDown 0.2s ease;
+            "
+          >
+            ${ (Store.columns || []).map(v => `
+              <div class="dropdown-option" data-value="${v}" style="padding: 0.75rem 1rem; cursor: pointer; font-size: 0.9375rem; color: #334155;">
+                ${v}
+              </div>
+            `).join('') }
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+  Condition: (row) => `
+    <div style="padding: 1rem 0.5rem;">
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display:block;font-size:0.875rem;font-weight:600;color:#475569;margin-bottom:0.5rem;text-align:left;">
+          Condition
+        </label>
+        <div class="dropdown-container" style="position: relative;">
+          <div 
+            class="dropdown-trigger" 
+            id="ConditionTrigger"
+            data-value="${row.Condition || ""}"
+            style="
+              display:flex;align-items:center;justify-content:space-between;width:100%;padding:0.75rem 1rem;background:linear-gradient(to bottom,#ffffff,#f8fafc);border:2px solid #e2e8f0;border-radius:0.75rem;cursor:pointer;font-size:0.9375rem;color:#1e293b;transition:all 0.2s ease;
+            "
+          >
+            <span id="ConditionText" style="color: ${row.Condition ? '#1e293b' : '#94a3b8'};">
+              ${row.Condition || 'Select Condition'}
+            </span>
+            <svg class="dropdown-arrow" style="width:30px;height:30px;color:#64748b;transition:transform 0.2s ease;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+          <div class="dropdown-list" id="ConditionList" style="display:none;position:absolute;top:calc(100% + 0.5rem);left:0;right:0;background:#ffffff;border:2px solid #e2e8f0;border-radius:0.75rem;z-index:9999;max-height:240px;overflow-y:auto;animation:slideDown 0.2s ease;">
+            ${["equals","not equals","greater than","less than","contains"].map(v => `
+              <div class="dropdown-option" data-value="${v}" style="padding:0.75rem 1rem;cursor:pointer;font-size:0.9375rem;color:#334155;">
+                ${v}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+  SelectValue: (row) => `
+    <div style="padding: 1rem 0.5rem;">
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display:block;font-size:0.875rem;font-weight:600;color:#475569;margin-bottom:0.5rem;text-align:left;">
+          Select Value
+        </label>
+        <div class="dropdown-container" style="position: relative;">
+          <div 
+            class="dropdown-trigger" 
+            id="SelectValueTrigger"
+            data-value="${row.SelectValue || ""}"
+            style="
+              display:flex;align-items:center;justify-content:space-between;width:100%;padding:0.75rem 1rem;background:linear-gradient(to bottom,#ffffff,#f8fafc);border:2px solid #e2e8f0;border-radius:0.75rem;cursor:pointer;font-size:0.9375rem;color:#1e293b;transition:all 0.2s ease;
+            "
+          >
+            <span id="SelectValueText" style="color: ${row.SelectValue ? '#1e293b' : '#94a3b8'};">
+              ${row.SelectValue || 'Select Value'}
+            </span>
+            <svg class="dropdown-arrow" style="width:30px;height:30px;color:#64748b;transition:transform 0.2s ease;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+          <div class="dropdown-list" id="SelectValueList" style="display:none;position:absolute;top:calc(100% + 0.5rem);left:0;right:0;background:#ffffff;border:2px solid #e2e8f0;border-radius:0.75rem;z-index:9999;max-height:240px;overflow-y:auto;animation:slideDown 0.2s ease;">
+            ${(Store.selectedArray || []).map(v => `
+              <div class="dropdown-option" data-value="${v}" style="padding:0.75rem 1rem;cursor:pointer;font-size:0.9375rem;color:#334155;">
+                ${v}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+
+  Flag: (row) => `
+    <div style="padding: 1rem 0.5rem;">
+      <div style="margin-top: 1.5rem;">
+        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem; text-align: left;">
+          Flag Status
+        </label>
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border: 2px solid #e2e8f0;
+          border-radius: 0.75rem;
+        ">
+          <label class="switch" style="position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0;">
+            <input 
+              type="checkbox" 
+              id="flagSwitch" 
+              ${row.Flag === "True" ? "checked" : ""}
+              style="opacity: 0; width: 0; height: 0;"
+            />
+            <span 
+              class="slider"
+              style="
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+                border-radius: 28px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+              "
+            >
+              <span style="
+                position: absolute;
+                content: '';
+                height: 22px;
+                width: 22px;
+                left: 3px;
+                bottom: 3px;
+                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                border-radius: 50%;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+              "></span>
+            </span>
+          </label>
+          <span 
+            id="flagLabel"
+            style="
+              font-size: 0.9375rem;
+              font-weight: 600;
+              color: ${row.Flag === "True" ? "#6366f1" : "#64748b"};
+              transition: color 0.3s ease;
+            "
+          >
+            ${row.Flag === "True" ? "True" : "False"}
+          </span>
+        </div>
+      </div>
+    </div>
+  `
+};
+
+// ----------------------------
+// editvalue function (shows only requested section)
+// ----------------------------
+const editvalue = async (id, attribute) => {
+
+ const engine = Store.engines.find((e) => e.id === id);
+  if (!engine) return;
+
+  const row = {};
+  let oldSelectAttribute = "";
+
+  engine.nodes.forEach((nid) => {
+    const node = Store.nodes.find((n) => n.id === nid);
+    if (node) row[node.data.label] = node.data.value;
+
+    if (node && node.data.label === "SelectAttribute") {
+      oldSelectAttribute = node.data.value;   // save old value
+    }
+  });
+
+  if (attribute === "SelectAttribute") {
+
+    const newValue = row["SelectAttribute"];  // new selected value
+
+    if (newValue !== oldSelectAttribute) {
+      // Only clear WHEN changed
+      row["SelectValue"] = "";
+
+      engine.nodes.forEach((nodeId) => {
+        const node = Store.nodes.find((n) => n.id === nodeId);
+        if (node && node.data.label === "SelectValue") {
+          node.data.value = "";
+        }
+      });
+    }
+  }
+
+  // If attribute unknown, fallback to ConditionId
+  if (!popupSections[attribute]) attribute = "ConditionId";
+
+  // Build full HTML with styles (keeps your original style block)
+  const html = `
+    <div style="padding: 0;">
+      ${popupSections[attribute](row)}
+    </div>
+
+    <style>
+      .swal-custom-popup { border-radius: 1rem !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25) !important; }
+      .swal-confirm-btn { background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important; color: white !important; border: none !important; border-radius: 0.75rem !important; padding: 0.75rem 2rem !important; font-size: 0.9375rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px -1px rgba(99,102,241,0.3) !important; }
+      .swal-confirm-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 10px 15px -3px rgba(99,102,241,0.4) !important; }
+      .swal-cancel-btn { background: white !important; color: #64748b !important; border: 2px solid #e2e8f0 !important; border-radius: 0.75rem !important; padding: 0.75rem 2rem !important; font-size: 0.9375rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s ease !important; margin-right: 0.75rem !important; }
+      @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      .dropdown-list::-webkit-scrollbar { width: 6px; }
+      .dropdown-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+      .dropdown-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      .dropdown-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+  `;
+
+  const { value: formValues } = await Swal.fire({
+    title:
+      `<div style="color:#1e293b;font-weight:700;font-size:1.25rem;margin-bottom:0.25rem;">Edit ${attribute.replace(/([A-Z])/g,' $1').trim()}</div>`,
+    html,
+    showCancelButton: true,
+    confirmButtonText: "Update Rule",
+    cancelButtonText: "Cancel",
+    customClass: {
+      popup: "swal-custom-popup",
+      confirmButton: "swal-confirm-btn",
+      cancelButton: "swal-cancel-btn",
+    },
+    buttonsStyling: false,
+    width: "600px",
+    padding: "1.5rem",
+    background: "#ffffff",
+    backdrop: "rgba(0, 0, 0, 0.4)",
+    didOpen: () => {
+      // Attach handlers only for the fields present in this popup
+      // Dropdown helper:
+      const attachDropdown = (field, sourceArrayGetter, fetchOnOpen) => {
+        const trigger = document.getElementById(`${field}Trigger`);
+        const list = document.getElementById(`${field}List`);
+        const text = document.getElementById(`${field}Text`);
+        const arrow = trigger?.querySelector(".dropdown-arrow");
+
+        if (!trigger || !list) return;
+
+        trigger.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const isOpen = list.style.display === "block";
+          document.querySelectorAll(".dropdown-list").forEach((el) => (el.style.display = "none"));
+          document.querySelectorAll(".dropdown-arrow").forEach((a) => (a.style.transform = "rotate(0deg)"));
+          if (list) list.style.display = isOpen ? "none" : "block";
+          if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+
+          // If fetchOnOpen is true (SelectValue), compute values based on SelectAttribute
+          if (fetchOnOpen && !isOpen) {
+            // Determine selected attribute
+            let selectedAttr = document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") || "";
+            if (!selectedAttr) {
+              // fallback to engine nodes (your existing approach)
+              const engine = Store.engines.find((e) => e.id === id);
+              if (engine) {
+                engine.nodes.forEach((nid) => {
+                  const node = Store.nodes.find((n) => n.id === nid);
+                  if (node?.data.label === "SelectAttribute") selectedAttr = node.data.value;
+                  Store.selectedvalue = node.data.value;
+                });
+              }
+            }
+
+            if (!selectedAttr || selectedAttr.trim() === "") {
+              list.innerHTML = `<div style="padding:10px; color:#94a3b8">No attribute selected</div>`;
+              return;
+            }
+
+            // fetch values (your original fetch logic)
+            try {
+              const res = await fetch(`http://localhost:4000/values/${encodeURIComponent(selectedAttr)}`);
+              const result = await res.json();
+              let arr = [];
+              if (Array.isArray(result)) arr = result;
+              else if (result?.values) arr = result.values;
+              Store.selectedArray = arr;
+
+              if (arr.length === 0) {
+                list.innerHTML = `<div style="padding:10px; color:#94a3b8">No values found</div>`;
+              } else {
+                list.innerHTML = arr.map(v => `
+                  <div class="dropdown-option" data-value="${v}" style="padding:.75rem 1rem; cursor:pointer; color:#334155">
+                    ${v}
+                  </div>
+                `).join('');
+              }
+
+              // attach click events
+              list.querySelectorAll(".dropdown-option").forEach((opt) => {
+                opt.addEventListener("click", () => {
+                  text.textContent = opt.textContent || "";
+                  trigger.setAttribute("data-value", opt.getAttribute("data-value"));
+                  list.style.display = "none";
+                  if (arrow) arrow.style.transform = "rotate(0deg)";
+                });
+              });
+
+            } catch (err) {
+              console.error("Error fetching values:", err);
+              list.innerHTML = `<div style="padding:10px; color:#94a3b8">Error loading values</div>`;
+            }
+          }
+        });
+
+        // Attach pre-existing options click (for static lists)
+        list.querySelectorAll(".dropdown-option").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            if (text) text.textContent = opt.textContent || "";
+            if (text) text.style.color = "#1e293b";
+            if (trigger) trigger.setAttribute("data-value", opt.getAttribute("data-value") || "");
+            if (list) list.style.display = "none";
+            if (arrow) arrow.style.transform = "rotate(0deg)";
+          });
+        });
+
+        // Close when clicking outside
+        document.addEventListener("click", (e) => {
+          if (trigger && list && !trigger.contains(e.target) && !list.contains(e.target)) {
+            list.style.display = "none";
+            if (arrow) arrow.style.transform = "rotate(0deg)";
+          }
+        });
+      };
+
+      // Attach dropdowns only if those elements exist
+      if (document.getElementById("SelectAttributeTrigger")) {
+        attachDropdown("SelectAttribute", () => Store.columns || [], false);
+      }
+      if (document.getElementById("ConditionTrigger")) {
+        attachDropdown("Condition", () => ["equals","not equals","greater than","less than","contains"], false);
+      }
+      if (document.getElementById("SelectValueTrigger")) {
+        // fetchOnOpen = true so it loads based on SelectAttribute
+        attachDropdown("SelectValue", () => Store.selectedArray || [], true);
+      }
+
+      // Flag switch handler
+      const flagSwitch = document.getElementById("flagSwitch");
+      const flagLabel = document.getElementById("flagLabel");
+      if (flagSwitch) {
+        flagSwitch.addEventListener("change", () => {
+          if (flagLabel) {
+            flagLabel.textContent = flagSwitch.checked ? "True" : "False";
+            flagLabel.style.color = flagSwitch.checked ? "#6366f1" : "#64748b";
+          }
+        });
+      }
+    },
+    preConfirm: () => {
+      return {
+        ConditionId: document.getElementById("condId")?.value || "",
+        SelectAttribute:
+          document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
+          document.getElementById("SelectAttributeText")?.textContent?.trim() ||
+          "",
+        Condition:
+          document.getElementById("ConditionTrigger")?.getAttribute("data-value") ||
+          document.getElementById("ConditionText")?.textContent?.trim() ||
+          "",
+        SelectValue:
+          document.getElementById("SelectValueTrigger")?.getAttribute("data-value") ||
+          document.getElementById("SelectValueText")?.textContent?.trim() ||
+          "",
+        Flag: document.getElementById("flagSwitch")?.checked ? "True" : "False",
+      };
+    }
+  });
+
+  // If user cancelled / nothing returned
+  if (!formValues) return;
+
+  // Update store nodes with only the field returned
+  Object.keys(formValues).forEach((label) => {
+    if (!formValues[label]) return;
+    let node = Store.nodes.find(
+      (n) => n.data.label === label && engine.nodes.includes(n.id)
+    );
+    if (!node) {
+      const newNodeId = `${label}_${Date.now()}`;
+      const newNode = {
+        id: newNodeId,
+        type: "default",
+        data: { label, value: formValues[label] },
+        position: { x: 0, y: 0 },
+      };
+      Store.nodes.push(newNode);
+      engine.nodes.push(newNodeId);
+    } else {
+      node.data.value = formValues[label];
+    }
+  });
+
+  Swal.fire({
+    title: "Success!",
+    text: "Rule updated successfully!",
+    icon: "success",
+    confirmButtonText: "OK",
+    customClass: {
+      confirmButton: "swal-confirm-btn",
+    },
+    buttonsStyling: false,
+  });
+};
 
   // Group engines by RuleId
   const groupedByRuleId = {};
@@ -378,34 +871,34 @@ const FlowCanvas = observer(() => {
   // EDIT RULE-ID FOR GROUP
   // (unchanged from your original behavior)
   // ===========================
-  const onEditRuleId = (ruleId) => {
-    Swal.fire({
-      title: "Edit RuleId",
-      input: "text",
-      inputValue: ruleId,
-      showCancelButton: true,
-      confirmButtonText: "Update",
-    }).then((res) => {
-      if (!res.value) return;
+  // const onEditRuleId = (ruleId) => {
+  //   Swal.fire({
+  //     title: "Edit RuleId",
+  //     input: "text",
+  //     inputValue: ruleId,
+  //     showCancelButton: true,
+  //     confirmButtonText: "Update",
+  //   }).then((res) => {
+  //     if (!res.value) return;
 
-      const newRuleId = res.value;
+  //     const newRuleId = res.value;
 
-      // update all engines in this group
-      Store.engines.forEach((engine) => {
-        engine.nodes.forEach((id) => {
-          const node = Store.nodes.find((n) => n.id === id);
-          if (node?.data.label === "RuleId" && node.data.value === ruleId) {
-            node.data.value = newRuleId;
-          }
-        });
-      });
+  //     // update all engines in this group
+  //     Store.engines.forEach((engine) => {
+  //       engine.nodes.forEach((id) => {
+  //         const node = Store.nodes.find((n) => n.id === id);
+  //         if (node?.data.label === "RuleId" && node.data.value === ruleId) {
+  //           node.data.value = newRuleId;
+  //         }
+  //       });
+  //     });
 
-      // update UI sorting order
-      setRuleIdOrder((prev) =>
-        prev.map((rid) => (rid === ruleId ? newRuleId : rid))
-      );
-    });
-  };
+  //     // update UI sorting order
+  //     setRuleIdOrder((prev) =>
+  //       prev.map((rid) => (rid === ruleId ? newRuleId : rid))
+  //     );
+  //   });
+  // };
 
   // ===========================
   // DELETE GROUP
@@ -431,561 +924,6 @@ const FlowCanvas = observer(() => {
     });
   };
 
-  // Handlers for Edit/Delete/Add - keep your original behavior
-  const handleEditRule = async (engId) => {
-    const engine = Store.engines.find((e) => e.id === engId);
-    if (!engine) return;
-
-    const row = {};
-    engine.nodes.forEach((id) => {
-      const node = Store.nodes.find((n) => n.id === id);
-      if (node) row[node.data.label] = node.data.value;
-    });
-
-    const { value: formValues } = await Swal.fire({
-      title:
-        '<div style="color: #1e293b; font-weight: 700; font-size: 1.5rem; margin-bottom: 0.5rem;">Edit Rule</div>',
-      html: `
-        <div style="padding: 1rem 0.5rem;">
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
-              Condition ID
-            </label>
-            <input 
-              id="condId" 
-              type="text"
-              placeholder="Enter Condition ID" 
-              value="${row.ConditionId || ""}"
-              style="
-                width: 100%;
-                padding: 0.75rem 1rem;
-                border: 2px solid #e2e8f0;
-                border-radius: 0.75rem;
-                font-size: 0.9375rem;
-                color: #1e293b;
-                background: #ffffff;
-                transition: all 0.2s ease;
-                outline: none;
-              "
-              onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
-              onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"
-            />
-          </div>
-
-          ${["SelectAttribute", "Condition", "SelectValue"]
-            .map(
-              (field) => `
-              <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
-                  ${field.replace(/([A-Z])/g, " $1").trim()}
-                </label>
-                <div class="dropdown-container" style="position: relative;">
-                  <div 
-                    class="dropdown-trigger" 
-                    id="${field}Trigger"
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      width: 100%;
-                      padding: 0.75rem 1rem;
-                      background: linear-gradient(to bottom, #ffffff, #f8fafc);
-                      border: 2px solid #e2e8f0;
-                      border-radius: 0.75rem;
-                      cursor: pointer;
-                      font-size: 0.9375rem;
-                      color: #1e293b;
-                      transition: all 0.2s ease;
-                    "
-                    onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)';"
-                    onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none';"
-                  >
-                    <span id="${field}Text" style="color: ${
-                row[field] ? "#1e293b" : "#94a3b8"
-              };">
-                      ${
-                        row[field] ||
-                        `Select ${field.replace(/([A-Z])/g, " $1").trim()}`
-                      }
-                    </span>
-                    <svg 
-                      class="dropdown-arrow" 
-                      style="width: 30px; height: 30px; color: #64748b; transition: transform 0.2s ease;"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 9l6 6 6-6" />
-                    </svg>
-                  </div>
-                  <div 
-                    class="dropdown-list" 
-                    id="${field}List"
-                    style="
-                      display: none;
-                      position: absolute;
-                      top: calc(100% + 0.5rem);
-                      left: 0;
-                      right: 0;
-                      background: #ffffff;
-                      border: 2px solid #e2e8f0;
-                      border-radius: 0.75rem;
-                      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-                      z-index: 9999;
-                      max-height: 240px;
-                      overflow-y: auto;
-                      animation: slideDown 0.2s ease;
-                    "
-                  >
-                    ${(field === "SelectAttribute"
-                      ? Store.columns
-                      : field === "Condition"
-                      ? [
-                          "equals",
-                          "not equals",
-                          "greater than",
-                          "less than",
-                          "contains",
-                        ]
-                      : Store.selectedArray
-                    )
-                      .map(
-                        (v) => `
-                        <div 
-                          class="dropdown-option" 
-                          data-value="${v}"
-                          style="
-                            padding: 0.75rem 1rem;
-                            cursor: pointer;
-                            font-size: 0.9375rem;
-                            color: #334155;
-                            transition: all 0.15s ease;
-                            border-left: 3px solid transparent;
-                          "
-                          onmouseover="this.style.background='#f1f5f9'; this.style.borderLeftColor='#6366f1'; this.style.color='#6366f1';"
-                          onmouseout="this.style.background='transparent'; this.style.borderLeftColor='transparent'; this.style.color='#334155';"
-                        >
-                          ${v}
-                        </div>` 
-                      )
-                      .join("")}
-                  </div>
-                </div>
-              </div>`
-            )
-            .join("")}
-
-           <div style="margin-top: 1.5rem;">
-            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.75rem; text-align: left;">
-              Flag Status
-            </label>
-            <div style="
-              display: flex;
-              align-items: center;
-              gap: 1rem;
-              padding: 1rem;
-              background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-              border: 2px solid #e2e8f0;
-              border-radius: 0.75rem;
-            ">
-              <label class="switch" style="position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0;">
-                <input 
-                  type="checkbox" 
-                  id="flagSwitch" 
-                  ${row.Flag === "True" ? "checked" : ""}
-                  style="opacity: 0; width: 0; height: 0;"
-                />
-                <span 
-                  class="slider"
-                  style="
-                    position: absolute;
-                    cursor: pointer;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
-                    border-radius: 28px;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-                  "
-                >
-                  <span style="
-                    position: absolute;
-                    content: '';
-                    height: 22px;
-                    width: 22px;
-                    left: 3px;
-                    bottom: 3px;
-                    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-                    border-radius: 50%;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                  "></span>
-                </span>
-              </label>
-              <span 
-                id="flagLabel"
-                style="
-                  font-size: 0.9375rem;
-                  font-weight: 600;
-                  color: ${row.Flag === "True" ? "#6366f1" : "#64748b"};
-                  transition: color 0.3s ease;
-                "
-              >
-                ${row.Flag === "True" ? "True" : "False"}
-              </span>
-            </div>
-          </div>
-
-      
-        <style>
-        .swal-custom-popup {
-          border-radius: 1rem !important;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-        }
-
-        .swal-confirm-btn {
-          background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
-          color: white !important;
-          border: none !important;
-          border-radius: 0.75rem !important;
-          padding: 0.75rem 2rem !important;
-          font-size: 0.9375rem !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.2s ease !important;
-          box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3) !important;
-        }
-
-        .swal-confirm-btn:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4) !important;
-        }
-
-        .swal-confirm-btn-danger {
-          background: linear-gradient(135deg, #e11b1bff 0%, #f87171 100%) !important;
-          color: white !important;
-          border: none !important;
-          border-radius: 0.75rem !important;
-          padding: 0.75rem 2rem !important;
-          font-size: 0.9375rem !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.2s ease !important;
-          box-shadow: 0 4px 6px -1px rgba(242, 65, 65, 0.3) !important;
-        }
-
-        .swal-confirm-btn-danger:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.4) !important;
-        }
-
-        .swal-cancel-btn {
-          background: white !important;
-          color: #64748b !important;
-          border: 2px solid #e2e8f0 !important;
-          border-radius: 0.75rem !important;
-          padding: 0.75rem 2rem !important;
-          font-size: 0.9375rem !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.2s ease !important;
-          margin-right: 0.75rem !important;
-        }
-
-        .swal-cancel-btn:hover {
-          background: #f8fafc !important;
-          border-color: #cbd5e1 !important;
-          color: #475569 !important;
-        }
-          @keyframes slideDown {
-            from {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          input[type="checkbox"]:checked + .slider {
-            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important;
-          }
-
-          input[type="checkbox"]:checked + .slider span {
-            transform: translateX(24px);
-          }
-
-          .dropdown-list::-webkit-scrollbar {
-            width: 6px;
-          }
-
-          .dropdown-list::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-          }
-
-          .dropdown-list::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-          }
-
-          .dropdown-list::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-          }
-
-        </styl>
-      `,
-      didOpen: () => {
-      const dropdowns = ["SelectAttribute", "Condition", "SelectValue"];
-      dropdowns.forEach((field) => {
-        const trigger = document.getElementById(`${field}Trigger`);
-        const list = document.getElementById(`${field}List`);
-        const text = document.getElementById(`${field}Text`);
-        const arrow = trigger?.querySelector(".dropdown-arrow");
-
-       trigger?.addEventListener("click", async (e) => {
-  e.stopPropagation();
-
-  // Open/Close dropdown logic
-  const isOpen = list?.style.display === "block";
-  document.querySelectorAll(".dropdown-list").forEach((el) => (el.style.display = "none"));
-  document.querySelectorAll(".dropdown-arrow").forEach((a) => (a.style.transform = "rotate(0deg)"));
-  if (list) list.style.display = isOpen ? "none" : "block";
-  if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
-
-  // ⭐⭐ IMPORTANT LOGIC STARTS HERE ⭐⭐
- if (field === "SelectValue" && !isOpen) {
-  alert("SelectValue dropdown opened!");
-
-
-  
-
-
-  
-
-  let selectedAttr =
-    document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") || "";
-
- if (!selectedAttr) {
-    const engine = Store.engines.find((eng) => eng.id === engId);
-
-    if (engine) {
-      engine.nodes.forEach((id) => {
-        const node = Store.nodes.find((n) => n.id === id);
-
-        if (node?.data.label === "SelectAttribute") {
-          selectedAttr = node.data.value;
-        }
-      });
-    }
-  }
-
-
-
-  // ------------------------------------
-  // 3️⃣ IF STILL EMPTY → CLEAR DROPDOWN
-  // ------------------------------------
-  if (!selectedAttr || selectedAttr.trim() === "") {
-    console.warn("SelectAttribute is EMPTY. Clearing SelectValue dropdown.");
-
-    list.innerHTML = `
-      <div style="padding:10px; color:#94a3b8">
-        No attribute selected
-      </div>
-    `;
-
-    return; // ❌ STOP HERE
-  }
-
-  // ------------------------------------
-  // 4️⃣ VALID attribute → fetch backend
-  // ------------------------------------
-  try {
-    const res = await fetch(`http://localhost:4000/values/${selectedAttr}`);
-    const result = await res.json();
-
-    let arr = [];
-    if (Array.isArray(result)) arr = result;
-    else if (result?.values) arr = result.values;
-
-    Store.selectedArray = arr;
-
-    // ------------------------------------
-    // 5️⃣ RENDER VALUES → DROPDOWN
-    // ------------------------------------
-    if (arr.length === 0) {
-      list.innerHTML = `
-        <div style="padding:10px; color:#94a3b8">
-          No values found
-        </div>
-      `;
-    } else {
-      list.innerHTML = arr
-        .map(
-          (v) => `
-            <div class="dropdown-option"
-              data-value="${v}"
-              style="padding:.75rem 1rem; cursor:pointer; color:#334155">
-              ${v}
-            </div>
-          `
-        )
-        .join("");
-    }
-
-  // try {
-  //   // ⭐ WAIT FOR BACKEND RESPONSE ⭐
-  //   const res = await fetch(`http://localhost:4000/values/${selectedAttr}`);
-  //   const result = await res.json();
-
-  //   let arr = [];
-
-  //   if (Array.isArray(result)) arr = result;
-  //   else if (result?.values) arr = result.values;
-
-  //   // ⭐ UPDATE STORE ⭐
-  //   Store.selectedArray = arr;
-
-  //   console.log("Fetched values:", arr);
-
-  //   // ⭐ RENDER DROPDOWN DYNAMICALLY ⭐
-  //   list.innerHTML = arr
-  //     .map(
-  //       (v) => `
-  //       <div 
-  //         class="dropdown-option"
-  //         data-value="${v}"
-  //         style="
-  //           padding: .75rem 1rem;
-  //           cursor: pointer;
-  //           font-size: 0.9375rem;
-  //           color: #334155;
-  //         "
-  //       >
-  //         ${v}
-  //       </div>
-  //     `
-  //     )
-  //     .join("");
-
-    // ⭐ RE-ATTACH EVENTS ⭐
-    list.querySelectorAll(".dropdown-option").forEach((opt) => {
-      opt.addEventListener("click", () => {
-        text.textContent = opt.textContent || "";
-        trigger.setAttribute("data-value", opt.getAttribute("data-value"));
-        list.style.display = "none";
-        arrow.style.transform = "rotate(0deg)";
-      });
-    });
-  } catch (err) {
-    console.error("Error fetching values:", err);
-  }
-}
-
-  // ⭐⭐ IMPORTANT LOGIC ENDS HERE ⭐⭐
-});
-
-
-        list?.querySelectorAll(".dropdown-option").forEach((opt) => {
-          opt.addEventListener("click", () => {
-            if (text) text.textContent = opt.textContent || "";
-            if (text) text.style.color = "#1e293b";
-            if (trigger) trigger.setAttribute("data-value", opt.getAttribute("data-value") || "");
-            if (list) list.style.display = "none";
-            if (arrow) arrow.style.transform = "rotate(0deg)";
-          });
-        });
-
-        document.addEventListener("click", (e) => {
-          if (trigger && list && !trigger.contains(e.target) && !list.contains(e.target)) {
-            list.style.display = "none";
-            if (arrow) arrow.style.transform = "rotate(0deg)";
-          }
-        });
-      });
-
-      const flagSwitch = document.getElementById("flagSwitch");
-      const flagLabel = document.getElementById("flagLabel");
-      flagSwitch?.addEventListener("change", () => {
-        if (flagLabel) {
-          flagLabel.textContent = flagSwitch.checked ? "True" : "False";
-          flagLabel.style.color = flagSwitch.checked ? "#6366f1" : "#64748b";
-        }
-      });
-    },
-      preConfirm: () => ({
-        ConditionId: document.getElementById("condId")?.value || "",
-        SelectAttribute:
-          document
-            .getElementById("SelectAttributeTrigger")
-            ?.getAttribute("data-value") ||
-          document.getElementById("SelectAttributeText")?.textContent?.trim() ||
-          "",
-        Condition:
-          document
-            .getElementById("ConditionTrigger")
-            ?.getAttribute("data-value") ||
-          document.getElementById("ConditionText")?.textContent?.trim() ||
-          "",
-        SelectValue:
-          document
-            .getElementById("SelectValueTrigger")
-            ?.getAttribute("data-value") ||
-          document.getElementById("SelectValueText")?.textContent?.trim() ||
-          "",
-        Flag: document.getElementById("flagSwitch")?.checked ? "True" : "False",
-      }),
-      showCancelButton: true,
-      confirmButtonText: "Update Rule",
-      cancelButtonText: "Cancel",
-      customClass: {
-        popup: "swal-custom-popup",
-        confirmButton: "swal-confirm-btn",
-        cancelButton: "swal-cancel-btn",
-      },
-      buttonsStyling: false,
-      width: "600px",
-      padding: "2rem",
-      background: "#ffffff",
-      backdrop: "rgba(0, 0, 0, 0.4)",
-    });
-
-    if (formValues) {
-      Object.keys(formValues).forEach((label) => {
-        if (!formValues[label]) return;
-        let node = Store.nodes.find(
-          (n) => n.data.label === label && engine.nodes.includes(n.id)
-        );
-        if (!node) {
-          const newNodeId = `${label}_${Date.now()}`;
-          const newNode = {
-            id: newNodeId,
-            type: "default",
-            data: { label, value: formValues[label] },
-            position: { x: 0, y: 0 },
-          };
-          Store.nodes.push(newNode);
-          engine.nodes.push(newNodeId);
-        } else {
-          node.data.value = formValues[label];
-        }
-      });
-      Swal.fire({
-        title: "Success!",
-        text: "Rule updated successfully!",
-        icon: "success",
-        confirmButtonText: "OK",
-        customClass: {
-          confirmButton: "swal-confirm-btn",
-        },
-        buttonsStyling: false,
-      });
-    }
-  };
 
   const handleQuickAddRule = (ruleId) => {
     const newEngineId = `engine_${Date.now()}`;
@@ -1126,9 +1064,10 @@ const FlowCanvas = observer(() => {
                     isDragging={activeGroupId === ruleId}
                     collapsed={collapsed}
                     onToggleCollapse={() => toggleGroupCollapse(ruleId)}
-                    onEditRuleId={onEditRuleId}
+                    // onEditRuleId={onEditRuleId}
                     onDeleteGroup={onDeleteGroup}
-                    onEditRule={handleEditRule}
+                    editvalue={editvalue}
+
                     onDeleteRule={handleDeleteRule}
                     onQuickAddRule={handleQuickAddRule}
                   >
@@ -1148,16 +1087,16 @@ const FlowCanvas = observer(() => {
                           >
                             {engines.map(({ engine, rowData }, index) => (
                               <SortableRow key={engine.id} id={engine.id} showHandle={true}>
-                                <div className="text-left pl-4">{rowData.ConditionSetId || "-"}</div>
-                                <div>{rowData.RuleId || "-"}</div>
-                                <div>{rowData.ConditionId || "-"}</div>
-                                <div>{rowData.SelectAttribute || "-"}</div>
-                                <div>{rowData.Condition || "-"}</div>
-                                <div>{rowData.SelectValue || "-"}</div>
-                                <div>{rowData.Flag ? "True" : "False"}</div>
+                                <div className="text-left pl-4">{rowData.ConditionSetId || "Edit ConditionSetId"}</div>
+                                <div style={{cursor : "pointer"}}>{rowData.RuleId || "Edit RuleId"}</div>
+                                <div onClick={() => editvalue(engine.id,"ConditionId")} style={{cursor : "pointer"}}>{rowData.ConditionId || "Edit ConditionId"}</div>
+                                <div onClick={() => editvalue(engine.id,"SelectAttribute")} style={{cursor : "pointer"}}>{rowData.SelectAttribute || "Edit SelectAttribute"}</div>
+                                <div onClick={() => editvalue(engine.id,"Condition")} style={{cursor : "pointer"}}>{rowData.Condition || "Edit Condition"}</div>
+                                <div onClick={() => editvalue(engine.id,"SelectValue")} style={{cursor : "pointer"}}>{rowData.SelectValue || "Edit SelectValue"}</div>
+                                <div onClick={() => editvalue(engine.id,"Flag")} style={{cursor : "pointer"}}>{rowData.Flag ? "True" : "False"}</div>
                                 <div className="flex justify-center gap-2">
                                   <button
-                                    onClick={() => handleEditRule(engine.id)}
+                                    // onClick={() => handleEditRule(engine.id)}
                                     className="text-blue-600 hover:text-blue-800"
                                     title="Edit Rule"
                                   >

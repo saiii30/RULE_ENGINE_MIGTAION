@@ -212,6 +212,7 @@ setfontcolours12: action((id) => {
   dashboardName: "",
   dashboardArray: [],
   showDashboardPopup: false,
+  selectedvalue : "",
 
   selectDatabase(dbName) {
     runInAction(() => {
