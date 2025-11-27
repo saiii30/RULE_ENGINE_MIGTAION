@@ -37,8 +37,8 @@ export const Task = ({
       
       {
         column !== "rule" && (
-          <div  style={{position : "absolute",left : "-4px",bottom : "6px", cursor: "grab" }} {...attributes} {...listeners}>
-        <GripVertical size={16} />
+          <div  style={{position : "absolute",left : "-4px",bottom : "12px", cursor: "grab" }} {...attributes} {...listeners}>
+        <GripVertical size={18} />
       </div>
 
         )
@@ -54,9 +54,9 @@ export const Task = ({
       <div>{Actions}</div>
 
      <div className="actions">
-    <button className="edit-btn" onPointerDown={(e) => e.stopPropagation()}
+    <button  onPointerDown={(e) => e.stopPropagation()}
  onClick={() => handleEditRule(columnId,id)}>Edit</button>
-    <button className="delete-btn" onPointerDown={(e) => e.stopPropagation()}
+    <button style={{height : "30px"}} onPointerDown={(e) => e.stopPropagation()}
  onClick={() => handleDeleteRule(columnId,id)}>Delete</button>
   </div>
 

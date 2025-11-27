@@ -63,17 +63,36 @@ const { attributes, listeners, setNodeRef, transform, transition } =
       {/* <h4>{column.name}</h4> */}
   
 
-     <div style={{display : "flex",width : "100%",justifyContent : "space-between",alignItems : "center"}}>
+     <div style={{display : "flex",width : "100%",justifyContent : "space-between",alignItems : "center",position : "relative"}}>
       
-        <div style={{display : "flex",justifyContent : "space-between",alignItems : "center",height : "30px",textAlign : "center"}}>
+        <div style={{display : "flex",justifyContent : "space-between",alignItems : "center",height : "30px",textAlign : "center",position : "relative"}}>
 <div style={{display : "flex", cursor: "grab" }}>
-        <GripVertical size={16} ref={setNodeRef}  {...attributes} {...listeners}/>
+
+  {
+    column.type !== "rule" ? ( 
+      <GripVertical size={18} ref={setNodeRef}  {...attributes} {...listeners}/>
+
+    )
+     : 
+     (
+      <GripVertical style={{position : "absolute",top : "24px",right : "-10px"}} size={18} ref={setNodeRef}  {...attributes} {...listeners}/>
+     )
+
+  }
+        
       </div>
       
      
+     {
+        column.type === "group" && (
+
+          <div style={{fontSize : "14px"}}>{column.name}</div>
+         )
+
+     }
       
         
-        <div style={{fontSize : "14px"}}>{column.name}</div>
+        
       
         </div>
         

@@ -12,6 +12,7 @@ import { Columndata } from "../Column/Columndata";
 
 export const Rules = ({columns,setColumns,globalId,setGlobalId,handleAddGroup}) =>{
  const tablerow = [
+  
     "ConditionSetId",
     "RuleId",
     "ConditionId",
@@ -475,7 +476,7 @@ const deleteGroup = async (columnId) => {
   };
 
     return (
-        <div style={{ padding: "20px" ,width: "80%",background: "#f2f2f3"}}>
+        <div style={{ padding: "18px" ,width: "85%",background: "#f2f2f3"}}>
 
 
       {/* Table header - only once */}
@@ -484,7 +485,8 @@ const deleteGroup = async (columnId) => {
          display: "grid",
     gridTemplateColumns: "repeat(8, 1fr)",
           
-          background: "#efefef",
+          background :"#1f2937",
+          color : "white",
           padding: "20px",
           marginTop: "20px",
           borderRadius: "6px",
