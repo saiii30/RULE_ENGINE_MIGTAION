@@ -1,43 +1,78 @@
-import React from "react";
-import { useState } from "react";
-import { observer } from "mobx-react-lite";
-import { FaPlus } from "react-icons/fa";
+
+
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { MdEdit, MdDelete } from "react-icons/md";
-import Store from "../Store";
+import { FaPlus } from "react-icons/fa6";
 
 
-const ExplorerNode = observer(({  store ,treeData,setTreeData,setPopupOpen,popupOpen,setSelectedNode,selectedNode,hoverId,setHoverId}) => {
-
-
-  const studentList = ["Sample1", "Sample2", "Sample3", "Sample4"];
-
-
-      const handleNodeClick = (node1,level) => {
-
-
-        if(level === 2)
-        {
-          Store.isSidebarVisible1 = false
-        }
-        else{
-Store.isSidebarVisible1 = true
-        }
-
+export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTreeData,setSelectedNode,setHoverId,globalId,setColumns,hoverId,setGlobalId,handleAddGroup}) => {
+ const studentList = ["Sample1", "Sample2", "Sample3", "Sample4"];
+ const ruleOrGroup = ["Rule","Group"];
+    
+    
+    
+      // ➕ Add Rule or Group
+      const handleSubmit = (value) => {
+        if (value === "rule") {
+          setColumns((prev) => [
+            ...prev,
+            {
+              id: `column-${prev.length + 1}`,
+              type: "rule",
+              name: `Rule ${prev.length + 1}`,
+              tasks: [
+                {
+                  id: `task-${globalId}`,
+                  ConditionSetId: `ConditionSetId${globalId}`,
+                  RuleId: `RuleId${globalId}`,
+                  ConditionId: `ConditionId${globalId}`,
+                  SelectAttribute: "33",
+                  Condition: "33",
+                  SelectValue: "33",
+                  Flag: "33",
+                  Actions: "33",
+                  ruleorgroup: "rule",
+                },
+              ],
+            },
+          ]);
+          setGlobalId((id) => id + 1);
+         } 
+      };
+    
+      // Add Parent
+      const handleAddParent = () => {
+        const newParent = {
+          id: Date.now().toString(),
+          name: "Parent",
+          children: [],
+          isOpen: true,
+          level : 0,
+        };
+        setTreeData([...treeData, newParent]);
+      };
+    
+      // Node click → open popup
+      const handleNodeClick = (node) => {
         
-        Store.pop = node1.name
-
-        if(level >= 2)
-        {
-           
-          store.openRuleGroupPicker(node1.id, node1.name);
-        }
-        
-        setSelectedNode(node1);
+        setSelectedNode(node);
         setPopupOpen(true);
       };
     
+      const ruleOrGroupSelect = (value) => {
+        if(value === "Rule")
+        {
+          setPopupOpen(false);
+          handleSubmit("rule")
+    
+        }
+        else if(value === "Group")
+        {
+          setPopupOpen(false);
+         handleAddGroup()
+        }
+      }
     
       // Toggle expand/collapse
       const toggleNode = (id) => {
@@ -49,7 +84,7 @@ Store.isSidebarVisible1 = true
     
         setTreeData(update(treeData));
       };
-   
+    
       // Popup: add child
       const handlePopupSelect = (label) => {
     
@@ -57,7 +92,6 @@ Store.isSidebarVisible1 = true
     
         // Stop adding children to level 2
         if (selectedNode.level === 2) {
-         
           setPopupOpen(false);
           return;
         }
@@ -91,7 +125,7 @@ Store.isSidebarVisible1 = true
               <div
                 style={{
                   position: "absolute",
-                  left: -6,
+                  left: -10,
                   top: 0,
                   bottom: 0,
                   width: "1px",
@@ -115,7 +149,7 @@ Store.isSidebarVisible1 = true
               
     
               {/* Node Name */}
-              <span onClick={() => handleNodeClick(node,node.level)}>{node.name}</span>
+              <span onClick={() => handleNodeClick(node)}>{node.name}</span>
     
                {hoverId === node.id && (
               <div
@@ -141,9 +175,6 @@ Store.isSidebarVisible1 = true
                     background: "orange",
                     cursor: "pointer",
                     color : "black",
-                    display : "flex",
-                    alignItems : "center",
-                    justifyContent : "center" 
                     
                   }}
                 >
@@ -159,9 +190,7 @@ Store.isSidebarVisible1 = true
                     background: "yellow",
                     cursor: "pointer",
                     color : "black",
-                    display : "flex",
-                    alignItems : "center",
-                    justifyContent : "center"
+                   justifyContent : "center"
                   }}
                 >
                   <MdEdit />
@@ -176,9 +205,6 @@ Store.isSidebarVisible1 = true
                     background: "green",
                     color : "black",
                     cursor: "pointer",
-                     display : "flex",
-                    alignItems : "center",
-                    justifyContent : "center"
                   }}
                 >
                   <FaPlus />
@@ -192,35 +218,27 @@ Store.isSidebarVisible1 = true
         ));
     
 
+    return (
+        <div style={{width : "20%",padding: "20px",position : "relative" }}>
 
-  return (
-    <div style={{width : "100%"}}>
-
-      
+      <button onClick={handleAddParent}>Add Parent</button>
       <div style={{ marginTop: 20 }}>{renderTree(treeData)}</div>
 
-      
-      {/* {popupOpen && selectedNode.level <= 1 && (
+      {/* Popup */}
+      {popupOpen && selectedNode.level <= 1 && (
         <div
           style={{
             position: "absolute",
-            left : "100%",
-           
-            transform: "translate(-50%, -50%)",
+            top: "40%",
+            left: "40%",
             background: "white",
             padding: 20,
-            width : "300px",
-            height : "300px",
             border: "1px solid #ccc",
             borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            backgroundColor : "red",
-            zIndex: 1000,
-            overflowY: "auto",
           }}
         >
 
-          <div style={{ display: "flex", justifyContent: "flex-end"}}>
+          <div style={{ display: "flex", justifyContent: "flex-end"  }}>
       <button
         onClick={() => setPopupOpen(false)}
         style={{
@@ -230,14 +248,13 @@ Store.isSidebarVisible1 = true
           padding: "5px 10px",
           borderRadius: "5px",
           cursor: "pointer",
-          position : "fixed"
         }}
       >
         X
       </button>
     </div>
 
-          {Store.columns.map((s) => (
+          {studentList.map((s) => (
             <button
               key={s}
               onClick={() => handlePopupSelect(s)}
@@ -251,9 +268,57 @@ Store.isSidebarVisible1 = true
             </button>
           ))}
         </div>
-      )} */}
-  </div>
-  );
-});
+      )}
 
-export default ExplorerNode;
+
+
+      {popupOpen && selectedNode.level > 1 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "40%",
+            left: "40%",
+            background: "white",
+            padding: 20,
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+          }}
+        >
+
+          <div style={{ display: "flex", justifyContent: "flex-end"  }}>
+      <button
+        onClick={() => setPopupOpen(false)}
+        style={{
+          background: "red",
+          color: "white",
+          border: "none",
+          padding: "5px 10px",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+      >
+        X
+      </button>
+    </div>
+        
+
+          {ruleOrGroup.map((s) => (
+            <button
+              key={s}
+              onClick={() => ruleOrGroupSelect(s)}
+              style={{
+                display: "block",
+                margin: "8px 0",
+                width: "100%",
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    
+
+  </div>
+    )
+}
