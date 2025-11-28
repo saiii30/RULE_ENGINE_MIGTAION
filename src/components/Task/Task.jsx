@@ -6,6 +6,7 @@ import { GripVertical } from "lucide-react"; // 👈 drag icon (you can use any 
 import Swal from "sweetalert2";
 export const Task = ({
   id,
+  editvalue,
   ConditionSetId,
   RuleId,
   ConditionId,
@@ -15,7 +16,6 @@ export const Task = ({
   Flag,
   Actions,
   column,
-  handleEditRule,
   columnId,
   handleDeleteRule
 }) => {
@@ -46,16 +46,16 @@ export const Task = ({
 
       <div>{ConditionSetId}</div>
       <div>{RuleId}</div>
-      <div>{ConditionId}</div>
-      <div>{SelectAttribute}</div>
-      <div>{Condition}</div>
-      <div>{SelectValue}</div>
-      <div>{Flag}</div>
+      <div onClick={() => editvalue(columnId,"ConditionId")} style={{cursor : "pointer"}}>{ConditionId}</div>
+      <div onClick={() => editvalue(columnId,"SelectAttribute")} style={{cursor : "pointer"}}>{SelectAttribute}</div>
+      <div onClick={() => editvalue(columnId,"Condition")} style={{cursor : "pointer"}}>{Condition}</div>
+      <div onClick={() => editvalue(columnId,"SelectValue")} style={{cursor : "pointer"}}>{SelectValue}</div>
+      <div onClick={() => editvalue(columnId,"Flag")} style={{cursor : "pointer"}}>{Flag}</div>
       <div>{Actions}</div>
 
      <div className="actions">
-    <button  onPointerDown={(e) => e.stopPropagation()}
- onClick={() => handleEditRule(columnId,id)}>Edit</button>
+    {/* <button  onPointerDown={(e) => e.stopPropagation()}
+ onClick={() => handleEditRule(columnId,id)}>Edit</button> */}
     <button style={{height : "30px"}} onPointerDown={(e) => e.stopPropagation()}
  onClick={() => handleDeleteRule(columnId,id)}>Delete</button>
   </div>

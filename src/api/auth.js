@@ -3,7 +3,7 @@ import apiClient from "./apiClient";
 // ✅ Register
 export const register = async ({ username, email, password }) => {
   try {
-    const response = await apiClient.post("/auth/register", {
+    const response = await apiClient.post("api/auth/register", {
       username,
       email,
       password,
@@ -17,7 +17,7 @@ export const register = async ({ username, email, password }) => {
 // ✅ Login
 export const login = async ({ email, password }) => {
   try {
-    const response = await apiClient.post("/auth/login", { email, password });
+    const response = await apiClient.post("api/auth/login", { email, password });
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error: error.response?.data || error.message };

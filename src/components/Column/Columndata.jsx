@@ -8,7 +8,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
-export const Columndata = ({ column, addRuleInsideGroup,handleEditRule,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse,setColumns }) => {
+export const Columndata = ({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse,setColumns,editvalue }) => {
 
 const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -172,7 +172,7 @@ const { attributes, listeners, setNodeRef, transform, transition } =
                   {...task}
                   column={column.type}
                   columnId={column.id}
-                  handleEditRule={handleEditRule}
+                  editvalue={editvalue}
                   handleDeleteRule={handleDeleteRule}
                 />
               ))}

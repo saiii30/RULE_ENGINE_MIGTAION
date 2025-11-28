@@ -5,7 +5,8 @@ import { observer } from "mobx-react";
 
 
 import Navbar from "../Component/Navbar";
-
+import Store from "../Store";
+import { useEffect } from "react";
 
 import React, { useState } from "react";
 import Swal from "sweetalert2";
@@ -18,12 +19,110 @@ import {Rules} from "../components/Rules/Rules";
 const FlowDiagram = observer(() => {
     
 
+
+
   const [columns, setColumns] = useState([]);
   const [globalId, setGlobalId] = useState(1); 
   const [hoverId, setHoverId] = useState(null);
    const [selectedNode, setSelectedNode] = useState(null);
   const [popupOpen, setPopupOpen] = useState(false);
-   const [treeData, setTreeData] = useState([]);
+
+
+
+   useEffect(() => {
+          fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
+      }, []);
+
+      useEffect(() => {
+    // make sure autosave is running
+    Store.setupAutosave();
+    // try to restore the current dashboard/user save
+    Store.restoreFlow();
+  }, []);
+
+  const handleSubmit = (value) => {
+        if (value === "rule") {
+          setColumns((prev) => [
+            ...prev,
+            {
+              id: `column-${prev.length + 1}`,
+              type: "rule",
+              name: `Rule ${prev.length + 1}`,
+              tasks: [
+                {
+                  id: `task-${globalId}`,
+                  ConditionSetId: `ConditionSetId${globalId}`,
+                  RuleId: `RuleId${globalId}`,
+                  ConditionId: "Edit ConditionId",
+                  SelectAttribute: "Edit SelectAttribute",
+                  Condition: "Edit Condition",
+                  SelectValue: "Edit Value",
+                  Flag: "Edit Flag",
+                  Actions: "Edit Actions",
+                  ruleorgroup: "rule",
+                },
+              ],
+            },
+          ]);
+          setGlobalId((id) => id + 1);
+         } 
+
+         setPopupOpen(false);
+      };
+
+  const handlePopupSelect = (label) => {
+    
+        if (!selectedNode) return;
+    
+        // Stop adding children to level 2
+        if (selectedNode.level === 2) {
+          setPopupOpen(false);
+          return;
+        }
+        
+        const newChild = {
+          id: Date.now().toString(),
+          name: label,
+          children: [],
+          isOpen: true,
+          level: selectedNode.level + 1,
+        };
+    
+        const addChild = (nodes) =>
+          nodes.map((n) => {
+            if (n.id === selectedNode.id) {
+              return { ...n, children: [...n.children, newChild] };
+            }
+            return { ...n, children: addChild(n.children) };
+          });
+    
+       Store.setTreedata(addChild(Store.treedata));
+      Store.isSidebarVisible1 = false;
+       alert(Store.isSidebarVisible1)
+        setPopupOpen(false);
+      };
+
+      const selectvalue = (name) => {
+  
+    Store.addCollection(name);
+    const newParent = {
+          id: Date.now().toString(),
+          name: name,
+          children: [],
+          isOpen: true,
+          level : 0,
+        };
+        Store.setTreedata([...Store.treedata, newParent]);
+Store.isSidebarVisible1 = false;
+
+  };
+
+  const handleclose = () => {
+    Store.isSidebarVisible1 = false;
+  };
+
+  
+    
 
   const handleAddGroup = async () => {
       // 🧠 Ask user for the group name
@@ -59,12 +158,12 @@ const FlowDiagram = observer(() => {
                 id: `task-${globalId}`,
                 ConditionSetId: `ConditionSetId${globalId}`,
                 RuleId: `RuleId${globalId}`,
-                ConditionId: `ConditionId${globalId}`,
-                SelectAttribute: "33",
-                Condition: "33",
-                SelectValue: "33",
-                Flag: "33",
-                Actions: "33",
+                 ConditionId: "Edit ConditionId",
+                  SelectAttribute: "Edit SelectAttribute",
+                  Condition: "Edit Condition",
+                  SelectValue: "Edit Value",
+                  Flag: "Edit Flag",
+                  Actions: "Edit Actions",
                 
               },
           ], // no rules initially
@@ -80,8 +179,15 @@ const FlowDiagram = observer(() => {
           confirmButtonColor: "#2563eb",
         });
       }
+
+
+      setPopupOpen(false);
     };
     
+
+    const onClose = () => {
+      setPopupOpen(false);
+    }
   
 
 
@@ -91,8 +197,115 @@ const FlowDiagram = observer(() => {
       <Navbar />
 
       <div style={{width: "100%",display : "flex"}}>
+
+        {
+          popupOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-72 text-center min-h-[200px]">
+        <h3 className="text-lg font-bold mb-4">Choose Option</h3>
         
-      <FileExplorer treeData={treeData} popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen} setTreeData={setTreeData} setSelectedNode={setSelectedNode} setHoverId={setHoverId} columns={columns} globalId={globalId} setColumns={setColumns} setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
+        <div className="flex flex-col gap-3">
+          {/* Rule Button */}
+          <button
+            className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            onClick={() => handleSubmit("rule")}
+          >
+            Rule
+          </button>
+
+          {/* Group Button */}
+          <button
+            className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            onClick={() => handleAddGroup()}
+          >
+            Group
+          </button>
+        </div>
+
+        <button
+          className="mt-4 text-red-500 underline"
+          onClick={onClose}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+          )
+        }
+        
+        
+        {Store.isSidebarVisible1 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            background: "#fff",
+            padding: 20,
+            borderRadius: 8,
+            zIndex: 2000,
+            width: 360,
+            height : 300,
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            zIndex: 1000,
+            overflowY: "auto",
+          }}
+        >
+          <button onClick={handleclose} style={{ position: "absolute", right: 12, top: 12, border: "none", background: "red", fontSize: 18 , padding:4, }}>
+            ✕
+          </button>
+
+          {
+            Store.pop == "Parent" ? <>
+            
+
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {(Store.tablenames || []).map((table, idx) => (
+              <li
+                key={idx}
+                onClick={() => selectvalue(table)}
+                style={{
+                  padding: "8px 10px",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  marginBottom: 6,
+                  
+                }}
+              >
+                {table}
+              </li>
+            ))}
+          </ul>
+
+            </> : <>
+            <h3 style={{ marginBottom: 12 }}>Select a Collection</h3>
+
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {(Store.columns || []).map((table, idx) => (
+              <li
+                key={idx}
+                onClick={() => handlePopupSelect(table)}
+                
+                style={{
+                  padding: "8px 10px",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  marginBottom: 6,
+                  
+                }}
+              >
+                {table}
+              </li>
+            ))}
+          </ul></>
+          }
+
+          
+        </div>
+      )}
+      <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId} columns={columns} globalId={globalId} setColumns={setColumns} setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
       <Rules columns={columns} setColumns ={setColumns} globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} />
       
     </div>

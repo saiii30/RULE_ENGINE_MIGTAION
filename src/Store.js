@@ -434,6 +434,14 @@ deleteNode(id) {
 
 pop : "",
 
+treedata : [],
+isSidebarVisible1 : false,
+
+setTreedata(data)
+{
+  this.treedata = data
+},
+
 ////////////////rule group popup///////
 ruleGroupPicker: {
   open: false,
@@ -787,6 +795,7 @@ buildSnapshot() {
   const engines = toJS(this.engines);
   const ruleIdsPerGroup = toJS(this.ruleIdsPerGroup);
   const explorer = toJS(this.explorer);
+  const tree = toJS(this.treedata);
 
   // optional: derive a readable rule list for quick checks
   const rules = this.computeRulesFromGraph(nodes, engines);
@@ -829,7 +838,7 @@ applySnapshot(snap) {
     //added below line for new ruleid req
     this.globalRuleCounter = snap.globalRuleCounter || this.globalRuleCounter || 1;
     //////////////////
-
+   this.treedata = snap.tree || []; 
     this.explorer = snap.explorer || [];
     this.selectedCollections = snap.selectedCollections || [];
     this.activeCollection = snap.activeCollection || null;
@@ -853,6 +862,7 @@ setupAutosave() {
       engines: toJS(this.engines),
       ruleIdsPerGroup: toJS(this.ruleIdsPerGroup),
       explorer: toJS(this.explorer),
+      tree : toJS(this.treedata),
       selectedCollections: toJS(this.selectedCollections || []),
       activeCollection: this.activeCollection,
       dashboard: this.dashboard,
@@ -1091,7 +1101,7 @@ _mergeSnapshots(base = {}, override = {}) {
   merged.engines = this._mergeById(base.engines || [], override.engines || []);
   merged.rules = this._mergeById(base.rules || [], override.rules || []);
   merged.explorer = this._mergeExplorers(base.explorer || [], override.explorer || []);
-
+  merged.treedata = this._mergeById(base.treedata || [], override.treedata || []);
   merged.selectedCollections = Array.from(new Set([...(base.selectedCollections || []), ...(override.selectedCollections || [])]));
   merged.ruleIdsPerGroup = { ...(base.ruleIdsPerGroup || {}), ...(override.ruleIdsPerGroup || {}) };
   merged.ruleCounter = Math.max(base.ruleCounter || 0, override.ruleCounter || 0);

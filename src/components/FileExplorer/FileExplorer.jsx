@@ -4,14 +4,16 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { FaPlus } from "react-icons/fa6";
+import Store from "../../Store";
+import { useEffect } from "react";
 
+export const FileExplorer = ({popupOpen,selectedNode,setPopupOpen,setSelectedNode,setHoverId,globalId,setColumns,hoverId,setGlobalId,handleAddGroup}) => {
 
-export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTreeData,setSelectedNode,setHoverId,globalId,setColumns,hoverId,setGlobalId,handleAddGroup}) => {
- const studentList = ["Sample1", "Sample2", "Sample3", "Sample4"];
- const ruleOrGroup = ["Rule","Group"];
-    
-    
-    
+  useEffect(() => {
+    console.log("treedata updated:", Store.treedata);
+  }, [Store.treedata]);  
+
+     
       // ➕ Add Rule or Group
       const handleSubmit = (value) => {
         if (value === "rule") {
@@ -26,12 +28,12 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
                   id: `task-${globalId}`,
                   ConditionSetId: `ConditionSetId${globalId}`,
                   RuleId: `RuleId${globalId}`,
-                  ConditionId: `ConditionId${globalId}`,
-                  SelectAttribute: "33",
-                  Condition: "33",
-                  SelectValue: "33",
-                  Flag: "33",
-                  Actions: "33",
+                  ConditionId: "Edit ConditionId",
+                  SelectAttribute: "Edit SelectAttribute",
+                  Condition: "Edit Condition",
+                  SelectValue: "Edit Value",
+                  Flag: "Edit Flag",
+                  Actions: "Edit Actions",
                   ruleorgroup: "rule",
                 },
               ],
@@ -41,38 +43,40 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
          } 
       };
     
-      // Add Parent
-      const handleAddParent = () => {
-        const newParent = {
-          id: Date.now().toString(),
-          name: "Parent",
-          children: [],
-          isOpen: true,
-          level : 0,
-        };
-        setTreeData([...treeData, newParent]);
-      };
-    
-      // Node click → open popup
-      const handleNodeClick = (node) => {
+      
+      // // Node click → open popup
+      // const handleNodeClick = (node) => {
         
-        setSelectedNode(node);
+      //   setSelectedNode(node);
+      //   setPopupOpen(true);
+      // };
+
+      const handleNodeClick = (node1,level) => {
+
+
+        if(level === 2)
+        {
+          Store.isSidebarVisible1 = false
+        }
+        else{
+         Store.isSidebarVisible1 = true
+        }
+
+        
+        Store.pop = node1.name
+
+        if(level >= 2)
+        {
+           
+         
+        }
+        
+        setSelectedNode(node1);
         setPopupOpen(true);
       };
     
-      const ruleOrGroupSelect = (value) => {
-        if(value === "Rule")
-        {
-          setPopupOpen(false);
-          handleSubmit("rule")
     
-        }
-        else if(value === "Group")
-        {
-          setPopupOpen(false);
-         handleAddGroup()
-        }
-      }
+      
     
       // Toggle expand/collapse
       const toggleNode = (id) => {
@@ -82,7 +86,7 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
             return { ...n, children: update(n.children) };
           });
     
-        setTreeData(update(treeData));
+       Store.setTreedata(update(Store.treedata));
       };
     
       // Popup: add child
@@ -112,14 +116,14 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
             return { ...n, children: addChild(n.children) };
           });
     
-        setTreeData(addChild(treeData));
+       Store.setTreedata(addChild(Store.treedata));
         setPopupOpen(false);
       };
     
       const renderTree = (nodes, level = 0) =>
         nodes.map((node, index) => (
           <div key={node.id} style={{ marginLeft: level * 10, position: "relative",cursor : "pointer" }}>
-    
+           
             {/* Vertical Line */}
             {level > 0 && (
               <div
@@ -149,7 +153,7 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
               
     
               {/* Node Name */}
-              <span onClick={() => handleNodeClick(node)}>{node.name}</span>
+              <span onClick={() => handleNodeClick(node,node.level)}>{node.name}</span>
     
                {hoverId === node.id && (
               <div
@@ -221,11 +225,14 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
     return (
         <div style={{width : "15%",padding: "8px",position : "relative",background :"#1f2937",height : "100vh",color : "white",overflowY : "auto"}}>
 
-      <button onClick={handleAddParent}>Add Parent</button>
-      <div style={{ marginTop: 20 }}>{renderTree(treeData)}</div>
+      {/* <button onClick={handleAddParent}>Add Parent</button> */}
+      <div style={{ marginTop: 20 }}>{renderTree(Store.treedata)}</div>
+
+
+      
 
       {/* Popup */}
-      {popupOpen && selectedNode.level <= 1 && (
+      {/* {popupOpen && selectedNode.level <= 1 && (
         <div
           style={{
             position: "absolute",
@@ -268,10 +275,10 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
             </button>
           ))}
         </div>
-      )}
+      )} */}
 
 
-
+{/* 
       {popupOpen && selectedNode.level > 1 && (
         <div
           style={{
@@ -316,7 +323,7 @@ export const FileExplorer = ({treeData,popupOpen,selectedNode,setPopupOpen,setTr
             </button>
           ))}
         </div>
-      )}
+      )} */}
     
 
   </div>

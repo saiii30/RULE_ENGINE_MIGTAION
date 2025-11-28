@@ -13,141 +13,137 @@ const Home = observer(() => {
   const [value, setvalue] = useState('')
   const navigate = useNavigate()
 
-  const dashboarddata = async (dashboardName) => {
-    Store.isSidebarVisible = false
-    Store.dashboard = dashboardName
-    Store.name3 = []
-    Store.nodes = []
-    Store.treeData = {}
-    Store.edges = []
-    Store.validateeeeee = {}
-    Store.sampleNodes = {}
-    Store.sampleEdges = {}
-    Store.samplelastn = {}
-    Store.samplelaste = {}
-    Store.activeNode = ''
+  // const dashboarddata = async (dashboardName) => {
+  //   Store.isSidebarVisible = false
+  //   Store.dashboard = dashboardName
+  //   Store.name3 = []
+  //   Store.nodes = []
+  //   Store.treeData = {}
+  //   Store.edges = []
+  //   Store.validateeeeee = {}
+  //   Store.sampleNodes = {}
+  //   Store.sampleEdges = {}
+  //   Store.samplelastn = {}
+  //   Store.samplelaste = {}
+  //   Store.activeNode = ''
 
-    const token = localStorage.getItem('token')
-    if (!token) {
-      alert('Please log in to restore your flow')
-      return
-    }
+  //   const token = localStorage.getItem('token')
+  //   if (!token) {
+  //     alert('Please log in to restore your flow')
+  //     return
+  //   }
 
-    try {
-      const response = await fetch(`http://localhost:4000/api/flow/restore/${dashboardName}`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
+  //   try {
+  //     const response = await fetch(`http://localhost:4000/api/flow/restore/${dashboardName}`, {
+  //       method: 'GET',
+  //       headers: { 'Authorization': `Bearer ${token}` },
+  //     })
 
-      if (!response.ok) throw new Error('Failed to fetch flow data')
+  //     if (!response.ok) throw new Error('Failed to fetch flow data')
 
-      const data = await response.json()
+  //     const data = await response.json()
 
-      if (data.file) {
-        Store.find = true
-        Store.name3 = data.file
-        Object.assign(Store.sampleNodes, data.nodes)
-        Object.assign(Store.sampleEdges, data.edges)
-        Object.assign(Store.samplelastn, data.nodes1)
-        Object.assign(Store.samplelaste, data.edges1)
-        Object.assign(Store.validateeeeee, data.node)
-        Store.countt = data.countt
-        Store.counter = data.counter
-        Store.activeNode = data.active
-        Store.nodes = data.no
-        Store.edges = data.ed
-        Store.count = data.count
-        Store.nodeIdCounter = data.nodeIdCounter
-        Store.thistext = data.thistext
-        Store.value1 = data.value1
-        Store.tableName = data.tabelname
-        Store.tableindex = data.tableindex
-        Store.key1value = data.key1value
-        Store.key2value = data.key2value
-        Store.found = data.found
-        Store.coun = data.coun
-        Object.assign(Store.storerule, data.action)
+  //     if (data.file) {
+  //       Store.find = true
+  //       Store.name3 = data.file
+  //       Object.assign(Store.sampleNodes, data.nodes)
+  //       Object.assign(Store.sampleEdges, data.edges)
+  //       Object.assign(Store.samplelastn, data.nodes1)
+  //       Object.assign(Store.samplelaste, data.edges1)
+  //       Object.assign(Store.validateeeeee, data.node)
+  //       Store.countt = data.countt
+  //       Store.counter = data.counter
+  //       Store.activeNode = data.active
+  //       Store.nodes = data.no
+  //       Store.edges = data.ed
+  //       Store.count = data.count
+  //       Store.nodeIdCounter = data.nodeIdCounter
+  //       Store.thistext = data.thistext
+  //       Store.value1 = data.value1
+  //       Store.tableName = data.tabelname
+  //       Store.tableindex = data.tableindex
+  //       Store.key1value = data.key1value
+  //       Store.key2value = data.key2value
+  //       Store.found = data.found
+  //       Store.coun = data.coun
+  //       Object.assign(Store.storerule, data.action)
 
-        navigate('/flow')
+  //       navigate('/flow')
 
-        console.log(JSON.stringify(Store.name3))
-        Store.visibile4 = false
-        Swal.fire({
-          icon: 'success',
-          title: ' successfully Restored',
-          showConfirmButton: true,
-        })
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'No data Found',
-          showConfirmButton: true,
-        })
-      }
-    } catch (error) {
-      console.error('Error restoring flow:', error)
-    }
-  }
+  //       console.log(JSON.stringify(Store.name3))
+  //       Store.visibile4 = false
+  //       Swal.fire({
+  //         icon: 'success',
+  //         title: ' successfully Restored',
+  //         showConfirmButton: true,
+  //       })
+  //     } else {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'No data Found',
+  //         showConfirmButton: true,
+  //       })
+  //     }
+  //   } catch (error) {
+  //     console.error('Error restoring flow:', error)
+  //   }
+  // }
 
-  useEffect(() => {
-    let value = localStorage.getItem('username')
-    Store.username = value
-    Store.nodes = []
-    Store.edges = []
-    Store.tablename = ""
-    Store.name3 = []
-    Store.treeData = {}
-  }, [])
+  // useEffect(() => {
+  //   let value = localStorage.getItem('username')
+  //   Store.username = value
+  //   Store.nodes = []
+  //   Store.edges = []
+  //   Store.tablename = ""
+  //   Store.name3 = []
+  //   Store.treeData = {}
+  // }, [])
 
   const handle = () => {
-    navigate("/")
-    Store.setusername("")
-    Store.setpassword("")
-    localStorage.removeItem('username')
+     navigate("/")
+    Store.nodes = []
+    Store.tablename = ""
+    Store.name3 = []
+    Store.engines = {}
+    Store.treedata = []
+    Store.edges = []
+    Store.ruleIdsPerGroup = {}
+    Store.explorer = {}
+    Store.dashboard = ""
+    Store.databasename = ""
+    Store.tableindex = ""
+    sessionStorage.clear();
+  localStorage.clear();
     Store.username = 'Login'
     window.location.reload()
 
-    Store.nodes = []
-    Store.edges = []
-    Store.tablename = ""
-    Store.name3 = []
-    Store.countt = ''
-    Store.counter = ''
-    Store.validateeeeee = {}
-    Store.sampleNodes = {}
-    Store.sampleEdges = {}
-    Store.samplelastn = {}
-    Store.samplelaste = {}
-    Store.activeNode = ''
-    Store.treeData = {}
-    Store.storerule = {}
   }
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        const response = await fetch('http://localhost:4000/api/dashboard/names', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        })
+  // useEffect(() => {
+  //   const fetchDashboardData = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token')
+  //       const response = await fetch('http://localhost:4000/api/dashboard/names', {
+  //         method: 'GET',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'Authorization': `Bearer ${token}`,
+  //         },
+  //       })
 
-        if (response.ok) {
-          const data = await response.json()
-          Store.dashboardArray = data.dashboardNames
-        } else {
-          console.error('Failed to fetch dashboard data:', response.status)
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-      }
-    }
+  //       if (response.ok) {
+  //         const data = await response.json()
+  //         Store.dashboardArray = data.dashboardNames
+  //       } else {
+  //         console.error('Failed to fetch dashboard data:', response.status)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching dashboard data:', error)
+  //     }
+  //   }
 
-    fetchDashboardData()
-  }, [Store.visibile4])
+  //   fetchDashboardData()
+  // }, [Store.visibile4])
 
   return (
     <div className='relative'>
