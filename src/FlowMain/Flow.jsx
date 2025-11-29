@@ -21,7 +21,7 @@ const FlowDiagram = observer(() => {
 
 
 
-  const [columns, setColumns] = useState([]);
+const [columns, setColumns] = useState([]);
   const [globalId, setGlobalId] = useState(1); 
   const [hoverId, setHoverId] = useState(null);
    const [selectedNode, setSelectedNode] = useState(null);
@@ -42,7 +42,7 @@ const FlowDiagram = observer(() => {
 
   const handleSubmit = (value) => {
         if (value === "rule") {
-          setColumns((prev) => [
+        setColumns((prev) => [
             ...prev,
             {
               id: `column-${prev.length + 1}`,
@@ -305,7 +305,7 @@ Store.isSidebarVisible1 = false;
           
         </div>
       )}
-      <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId} columns={columns} globalId={globalId} setColumns={setColumns} setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
+        <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId} columns={columns} globalId={globalId} setColumns={setColumns} setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
       <Rules columns={columns} setColumns ={setColumns} globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} />
       
     </div>

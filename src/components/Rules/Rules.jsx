@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import Store from "../../Store";
 export const Rules = ({columns,setColumns,globalId,setGlobalId,handleAddGroup}) =>{
  const tablerow = [
-  
+    
     "ConditionSetId",
     "RuleId",
     "ConditionId",
@@ -22,7 +22,8 @@ export const Rules = ({columns,setColumns,globalId,setGlobalId,handleAddGroup}) 
     "Condition",
     "SelectValue",
     "Flag",
-    "Action",
+    "Actions",
+    
   ];
 
 
@@ -310,56 +311,32 @@ const popupSections = {
 
 const editvalue = async (id, attribute) => {
 
-
-
   const column = columns.find((c) => c.id === id);
-
-  
 if (!column) return;
-alert(JSON.stringify(column));
+
+
 const row = {};
 let oldSelectAttribute = "";
 
 column.tasks.forEach((task) => {
-  for (const [key, value] of Object.entries(task)) {
+  Object.entries(task).forEach(([key, value]) => {
     row[key] = value;
-    if (key === "SelectAttribute") oldSelectAttribute = value; 
-  }
+    if (key === "SelectAttribute") oldSelectAttribute = value;
+  });
 });
 
+// 3️⃣ Determine new value
+let newValue = "";
+
+// When user edits SelectAttribute
+if (attribute === "SelectAttribute") {
+  newValue =
+    document.getElementById("SelectAttributeTrigger")
+      ?.getAttribute("data-value") || "";
+} 
 
 
 
-  let newValue = "";
-
-  // When Attribute = SelectAttribute
-  if (attribute === "SelectAttribute") {
-    // get new attribute from UI
-    newValue =
-      document
-        .getElementById("SelectAttributeTrigger")
-        ?.getAttribute("data-value") || "";
-
-    // Only if the value is actually changed by user click
-    if (newValue !== oldSelectAttribute) {
-     
-column.tasks.forEach((task) => {
-  if (task.SelectValue !== undefined) {
-    task.SelectValue = "Edit SelectValue";
-  }
-});
-      
-    }
-  }
-
-  // Update normal nodes if user edits some other column
-  column.tasks.forEach((task) => {
-  if (task[attribute] !== undefined) {
-    alert("old value"+task[attribute]+" new value"+newValue)
-    task[attribute] = newValue;
-    alert("updated value"+task[attribute])
-  }
-});
   // If attribute unknown, fallback to ConditionId
   if (!popupSections[attribute]) attribute = "ConditionId";
 
@@ -435,39 +412,43 @@ column.tasks.forEach((task) => {
           // If fetchOnOpen is true (SelectValue), compute values based on SelectAttribute
           if (fetchOnOpen && !isOpen) {
             // Determine selected attribute
-            let selectedAttr =
-    document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
-    "";
+    //         let selectedAttr =
+    // document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
+    // "";
 
   // 2️⃣ Fallback to Store.columns if UI has nothing
-  if (!selectedAttr) {
-    const column = columns.find((c) => c.id === id);
+  
 
-    if (column) {
-      column.tasks.forEach((task) => {
-        // Pick SelectAttribute value
-        if (task.SelectAttribute) {
-          selectedAttr = task.SelectAttribute;
-          Store.selectedvalue = task.SelectAttribute;
-        }
+   // Find the column that contains the clicked task
+const column = columns.find((col) =>
+  col.tasks.some((t) => t.id === id)
+);
 
-        // 3️⃣ Auto-reset SelectValue if attribute changed
-        if (task.SelectValue && newValue !== oldSelectAttribute) {
-          task.SelectValue = "Edit SelectValue";
-        }
-      });
-    }
-  }
+if (!column) return;
 
-             // 4️⃣ If STILL empty, show message
-  if (!selectedAttr || selectedAttr.trim() === "") {
-    list.innerHTML = `<div style="padding:10px; color:#94a3b8">No attribute selected</div>`;
-    return;
-  }
+// 1️⃣ Find ONLY the task that was clicked
+const selectedTask = column.tasks.find((t) => t.id === id);
+
+if (!selectedTask) return;
+
+// 2️⃣ Use only this task's SelectAttribute
+if (selectedTask.SelectAttribute) {
+  Store.selectedvalue = selectedTask.SelectAttribute;
+  alert(Store.selectedvalue);   // ✅ only one alert now
+}
+
+// 3️⃣ Auto-reset SelectValue only for this task
+if (
+  selectedTask.SelectValue &&
+  newValue !== oldSelectAttribute
+) {
+  selectedTask.SelectValue = "Edit SelectValue";
+}
+
 
             // fetch values (your original fetch logic)
             try {
-              const res = await fetch(`http://localhost:4000/values/${encodeURIComponent(selectedAttr)}`);
+              const res = await fetch(`http://localhost:4000/values/${encodeURIComponent(Store.selectedvalue)}`);
               const result = await res.json();
               let arr = [];
               if (Array.isArray(result)) arr = result;
@@ -565,25 +546,35 @@ flagSwitch?.addEventListener("change", () => {
     }
   });
 
-  // If user cancelled / nothing returned
-  if (!formValues) return;
+  // 1️⃣ Find the column that contains this task id
+const column1 = columns.find((col) =>
+  col.tasks.some((t) => t.id === id)
+);
 
-  // Update store nodes with only the field returned
-  const column1 = columns.find((c) => c.id === id);
 if (!column1) return;
 
-// Update all tasks (usually 1 task, but handle multiple safely)
+// 2️⃣ Build new updatedColumns array
 const updatedColumns = columns.map((col) => {
-  if (col.id !== id) return col; // other columns unchanged
 
+  // If this column does NOT contain the task → return as-is
+  const containsTask = col.tasks.some((t) => t.id === id);
+  if (!containsTask) return col;
+
+  // 3️⃣ Update ONLY the matched task inside this column
   const updatedTasks = col.tasks.map((task) => {
-    const updatedTask = { ...task }; // never mutate directly
+    if (task.id !== id) return task; // untouched task
 
+    // Safe clone
+    const updatedTask = { ...task };
+
+    // Apply only the fields sent from popup
     Object.keys(formValues).forEach((label) => {
       const value = formValues[label];
-      if (!value) return;
 
-      // add or update
+      // ⛔ Value is empty? DO NOT CLEAR ORIGINAL VALUE
+      if (value === null || value === undefined || value === "") return;
+
+      // Set the new value
       updatedTask[label] = value;
     });
 
@@ -596,9 +587,10 @@ const updatedColumns = columns.map((col) => {
   };
 });
 
-// ---- UPDATE REACT STATE (THIS FIXES THE UI) ----
+// 4️⃣ Set the new columns (UI refresh)
 setColumns(updatedColumns);
 
+Store.selectedvalue = "" ;
 
   
 };
@@ -642,7 +634,7 @@ setColumns(updatedColumns);
       })
       .filter((col) => col !== null); // remove empty columns
 
-    setColumns(updatedColumns);
+     setColumns(updatedColumns);
 
     Swal.fire({
       title: "Deleted!",
@@ -669,7 +661,8 @@ const deleteGroup = async (columnId) => {
 
   if (result.isConfirmed) {
     // 🗑️ Remove the column by filtering it out
-    setColumns((prevColumns) => prevColumns.filter((col) => col.id !== columnId));
+   setColumns((prevColumns) => prevColumns.filter((col) => col.id !== columnId));
+
 
     // ✅ Success message
     Swal.fire({
@@ -687,7 +680,7 @@ const deleteGroup = async (columnId) => {
   // ➕ Add new rule inside specific group
   const addRuleInsideGroup = (groupId) => {
     
-    setColumns((prev) =>
+   setColumns((prev) =>
       prev.map((col) => {
         if (col.id === groupId && col.type === "group") {
           const newRule = {
@@ -732,12 +725,13 @@ const deleteGroup = async (columnId) => {
       const newIndex = prev.findIndex((c) => c.id === over.id);
       return arrayMove(prev, oldIndex, newIndex);
     });
+
     return;
   }
 
   if (isTaskDrag) {
     // 🔧 Move rule inside a group only
-    setColumns((prev) =>
+   setColumns((prev) =>
       prev.map((col) => {
         const activeIndex = col.tasks.findIndex((t) => t.id === active.id);
         const overIndex = col.tasks.findIndex((t) => t.id === over.id);
@@ -756,11 +750,10 @@ const deleteGroup = async (columnId) => {
       prev.map((col) =>
         col.id === groupId ? { ...col, collapsed: !col.collapsed } : col
       )
-    );
-  };
+    );  };
 
     return (
-        <div style={{ padding: "18px" ,width: "85%",background: "#f2f2f3"}}>
+        <div style={{ padding: "20px" ,width: "80%",background: "#f2f2f3"}}>
 
        <div
         style={{
@@ -814,21 +807,23 @@ const deleteGroup = async (columnId) => {
       </div>
       {/* Table header - only once */}
       <div
-        style={{
-         display: "grid",
-    gridTemplateColumns: "repeat(8, 1fr)",
-          
-          background :"#1f2937",
-          color : "white",
-          padding: "20px",
-          marginTop: "20px",
-          borderRadius: "6px",
-        }}
-      >
-        {tablerow.map((head) => (
-          <div key={head}>{head}</div>
-        ))}
-      </div>
+  style={{
+    display: "grid",
+    gridTemplateColumns: `repeat(${tablerow.length}, 1fr)`,
+    
+    background: "#1f2937",
+    color: "white",
+    padding: "10px",
+    marginTop: "4px",
+    borderRadius: "6px",
+    width: "100%",
+   
+  }}
+>
+  {tablerow.map((head) => (
+    <div key={head}>{head}</div>
+  ))}
+</div>
 
       
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -842,7 +837,7 @@ const deleteGroup = async (columnId) => {
         >
           
 <SortableContext
-  items={columns.map((c) => c.id)}              
+ items={columns.map((c) => c.id)}               
   strategy={verticalListSortingStrategy}        
 >
   {columns.map((col) => (

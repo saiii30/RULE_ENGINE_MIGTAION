@@ -17,7 +17,10 @@ export const Task = ({
   Actions,
   column,
   columnId,
-  handleDeleteRule
+  handleDeleteRule,
+  sortableProps,
+   
+ 
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
@@ -35,23 +38,41 @@ export const Task = ({
   className={column === "rule" ? "task" : "task1"}
 >
       
-      {
+      {/* {
         column !== "rule" && (
           <div  style={{position : "absolute",left : "-4px",bottom : "12px", cursor: "grab" }} {...attributes} {...listeners}>
         <GripVertical size={18} />
       </div>
 
         )
+      } */}
+
+      {
+
+        column === "rule" && (
+          <div  style={style} ref={sortableProps.setNodeRef} {...sortableProps.attributes} {...sortableProps.listeners}>
+        <GripVertical size={18} />  
+      </div>
+        ) 
+
       }
 
+      {
+        column !== "rule" && (
+ <div style={{ cursor: "grab" }} {...attributes} {...listeners}>
+        <GripVertical size={18} />
+      </div>
+        )
+      }
+      
       <div>{ConditionSetId}</div>
       <div>{RuleId}</div>
-      <div onClick={() => editvalue(columnId,"ConditionId")} style={{cursor : "pointer"}}>{ConditionId}</div>
-      <div onClick={() => editvalue(columnId,"SelectAttribute")} style={{cursor : "pointer"}}>{SelectAttribute}</div>
-      <div onClick={() => editvalue(columnId,"Condition")} style={{cursor : "pointer"}}>{Condition}</div>
-      <div onClick={() => editvalue(columnId,"SelectValue")} style={{cursor : "pointer"}}>{SelectValue}</div>
-      <div onClick={() => editvalue(columnId,"Flag")} style={{cursor : "pointer"}}>{Flag}</div>
-      <div>{Actions}</div>
+      <div onClick={() => editvalue(id,"ConditionId")} style={{cursor : "pointer"}}>{ConditionId}</div>
+      <div onClick={() => editvalue(id,"SelectAttribute")} style={{cursor : "pointer"}}>{SelectAttribute}</div>
+      <div onClick={() => editvalue(id,"Condition")} style={{cursor : "pointer"}}>{Condition}</div>
+      <div onClick={() => editvalue(id,"SelectValue")} style={{cursor : "pointer"}}>{SelectValue}</div>
+      <div onClick={() => editvalue(id,"Flag")} style={{cursor : "pointer"}}>{Flag}</div>
+      
 
      <div className="actions">
     {/* <button  onPointerDown={(e) => e.stopPropagation()}
