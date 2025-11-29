@@ -6,50 +6,13 @@ import { MdEdit, MdDelete } from "react-icons/md";
 import { FaPlus } from "react-icons/fa6";
 import Store from "../../Store";
 import { useEffect } from "react";
-
-export const FileExplorer = ({popupOpen,selectedNode,setPopupOpen,setSelectedNode,setHoverId,globalId,setColumns,hoverId,setGlobalId,handleAddGroup}) => {
+import { observer } from "mobx-react";
+export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode,setHoverId,hoverId}) => {
 
   useEffect(() => {
     console.log("treedata updated:", Store.treedata);
   }, [Store.treedata]);  
 
-     
-      // ➕ Add Rule or Group
-      const handleSubmit = (value) => {
-        if (value === "rule") {
-          setColumns((prev) => [
-            ...prev,
-            {
-              id: `column-${prev.length + 1}`,
-              type: "rule",
-              name: `Rule ${prev.length + 1}`,
-              tasks: [
-                {
-                  id: `task-${globalId}`,
-                  ConditionSetId: `ConditionSetId${globalId}`,
-                  RuleId: `RuleId${globalId}`,
-                  ConditionId: "Edit ConditionId",
-                  SelectAttribute: "Edit SelectAttribute",
-                  Condition: "Edit Condition",
-                  SelectValue: "Edit Value",
-                  Flag: "Edit Flag",
-                  Actions: "Edit Actions",
-                  ruleorgroup: "rule",
-                },
-              ],
-            },
-          ]);
-          setGlobalId((id) => id + 1);
-         } 
-      };
-    
-      
-      // // Node click → open popup
-      // const handleNodeClick = (node) => {
-        
-      //   setSelectedNode(node);
-      //   setPopupOpen(true);
-      // };
 
       const handleNodeClick = (node1,level) => {
 
@@ -328,4 +291,4 @@ export const FileExplorer = ({popupOpen,selectedNode,setPopupOpen,setSelectedNod
 
   </div>
     )
-}
+})

@@ -4,7 +4,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react"; // 👈 drag icon (you can use any icon)
 import Swal from "sweetalert2";
-export const Task = ({
+import { observer } from "mobx-react";
+export const Task = observer(({
   id,
   editvalue,
   ConditionSetId,
@@ -102,4 +103,4 @@ export const Task = ({
   </style>
     </div>
   );
-};
+});

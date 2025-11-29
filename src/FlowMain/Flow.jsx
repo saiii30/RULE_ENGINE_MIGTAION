@@ -21,7 +21,7 @@ const FlowDiagram = observer(() => {
 
 
 
-const [columns, setColumns] = useState([]);
+
   const [globalId, setGlobalId] = useState(1); 
   const [hoverId, setHoverId] = useState(null);
    const [selectedNode, setSelectedNode] = useState(null);
@@ -33,37 +33,38 @@ const [columns, setColumns] = useState([]);
           fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
       }, []);
 
-      useEffect(() => {
-    // make sure autosave is running
-    Store.setupAutosave(columns);
-    // try to restore the current dashboard/user save
-    Store.restoreFlow();
-  }, []);
+  //     useEffect(() => {
+  //   // make sure autosave is running
+  //   Store.setupAutosave(Store.column);
+  //   // try to restore the current dashboard/user save
+  //   Store.restoreFlow();
+  // }, []);
 
   const handleSubmit = (value) => {
         if (value === "rule") {
-        setColumns((prev) => [
-            ...prev,
-            {
-              id: `column-${prev.length + 1}`,
-              type: "rule",
-              name: `Rule ${prev.length + 1}`,
-              tasks: [
-                {
-                  id: `task-${globalId}`,
-                  ConditionSetId: `ConditionSetId${globalId}`,
-                  RuleId: `RuleId${globalId}`,
-                  ConditionId: "Edit ConditionId",
-                  SelectAttribute: "Edit SelectAttribute",
-                  Condition: "Edit Condition",
-                  SelectValue: "Edit Value",
-                  Flag: "Edit Flag",
-                  Actions: "Edit Actions",
-                  ruleorgroup: "rule",
-                },
-              ],
-            },
-          ]);
+       Store.column = [
+  ...Store.column,
+  {
+    id: `column-${Store.column.length + 1}`,
+    type: "rule",
+    name: `Rule ${Store.column.length + 1}`,
+    tasks: [
+      {
+        id: `task-${globalId}`,
+        ConditionSetId: `ConditionSetId${globalId}`,
+        RuleId: `RuleId${globalId}`,
+        ConditionId: "Edit ConditionId",
+        SelectAttribute: "Edit SelectAttribute",
+        Condition: "Edit Condition",
+        SelectValue: "Edit Value",
+        Flag: "Edit Flag",
+        Actions: "Edit Actions",
+        ruleorgroup: "rule",
+      },
+    ],
+  },
+];
+
           setGlobalId((id) => id + 1);
          } 
 
@@ -98,7 +99,7 @@ const [columns, setColumns] = useState([]);
     
        Store.setTreedata(addChild(Store.treedata));
       Store.isSidebarVisible1 = false;
-       alert(Store.isSidebarVisible1)
+      
         setPopupOpen(false);
       };
 
@@ -149,27 +150,28 @@ Store.isSidebarVisible1 = false;
       if (groupName) {
         // 🧩 Create a new column with that group name
         const newColumn = {
-          id: `column-${columns.length + 1}`, // unique id
-          type: "group",
-          name: groupName.trim(),
-          collopsed : false,
-          tasks: [
-            {
-                id: `task-${globalId}`,
-                ConditionSetId: `ConditionSetId${globalId}`,
-                RuleId: `RuleId${globalId}`,
-                 ConditionId: "Edit ConditionId",
-                  SelectAttribute: "Edit SelectAttribute",
-                  Condition: "Edit Condition",
-                  SelectValue: "Edit Value",
-                  Flag: "Edit Flag",
-                  Actions: "Edit Actions",
-                
-              },
-          ], // no rules initially
-        };
-    
-        setColumns([...columns, newColumn]);
+  id: `column-${Store.columns.length + 1}`,
+  type: "group",
+  name: groupName.trim(),
+  collopsed: false,
+  tasks: [
+    {
+      id: `task-${globalId}`,
+      ConditionSetId: `ConditionSetId${globalId}`,
+      RuleId: `RuleId${globalId}`,
+      ConditionId: "Edit ConditionId",
+      SelectAttribute: "Edit SelectAttribute",
+      Condition: "Edit Condition",
+      SelectValue: "Edit Value",
+      Flag: "Edit Flag",
+      Actions: "Edit Actions",
+    },
+  ],
+};
+
+// MobX update
+Store.column= [...Store.column, newColumn];
+
         setGlobalId((id) => id + 1);
         // ✅ Success popup
         Swal.fire({
@@ -305,8 +307,8 @@ Store.isSidebarVisible1 = false;
           
         </div>
       )}
-        <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId} columns={columns} globalId={globalId} setColumns={setColumns} setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
-      <Rules columns={columns} setColumns ={setColumns} globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} />
+        <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId}  globalId={globalId}  setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
+      <Rules  globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} />
       
     </div>
 

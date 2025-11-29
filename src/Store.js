@@ -789,12 +789,12 @@ if (groupName) {
 
 
 // ---- B.3 Build a stable snapshot of everything you need ----
-buildSnapshot(columns) {
+buildSnapshot() {
  
   const ruleIdsPerGroup = toJS(this.ruleIdsPerGroup);
   
   const tree = toJS(this.treedata);
-  const column = toJS(columns);
+  const column = toJS(this.column);
 
   // const explorer = toJS(this.explorer || []);
   // const nodes = toJS(this.nodes || []);
@@ -838,6 +838,7 @@ applySnapshot(snap) {
     this.globalRuleCounter = snap.globalRuleCounter || this.globalRuleCounter || 1;
     //////////////////
    this.treedata = snap.tree || []; 
+    this.column = snap.column || [];
     
     this.selectedCollections = snap.selectedCollections || [];
     this.activeCollection = snap.activeCollection || null;
@@ -847,9 +848,10 @@ applySnapshot(snap) {
   });
 },
 
+column : [],
 // ---- F.7 Autosave (debounced) any time nodes/edges/engines change ----
 _setupAutosaveOnce: false,
-setupAutosave(columns) {
+setupAutosave() {
   if (this._setupAutosaveOnce) return;
   this._setupAutosaveOnce = true;
 
@@ -858,7 +860,7 @@ setupAutosave(columns) {
     () => ({
       
       ruleIdsPerGroup: toJS(this.ruleIdsPerGroup),
-      column : toJS(columns),
+      column : toJS(this.column),
       tree : toJS(this.treedata),
       selectedCollections: toJS(this.selectedCollections || []),
       activeCollection: this.activeCollection,
@@ -866,7 +868,7 @@ setupAutosave(columns) {
     }),
     () => {
       try {
-        const snap = Store.buildSnapshot(columns);
+        const snap = Store.buildSnapshot();
         localStorage.setItem(Store.saveKey(), JSON.stringify(snap));
       } catch (e) {
         console.warn("Autosave failed:", e);
@@ -924,7 +926,7 @@ computeRulesFromGraph(nodes, engines) {
 lastExportedData: null,
 currentFileName: null,
 // ------------------ Download (Always from last saved snapshot) ------------------
-downloadLastExport: action(async (columns) => {
+downloadLastExport: action(async () => {
   if (!Store.lastExportedData) {
     Swal.fire("No data", "Please Save or Save As first.", "warning");
     return;
@@ -972,14 +974,14 @@ downloadLastExport: action(async (columns) => {
 
 ///////
 // ------------------ Save (Update existing package) ------------------
-saveFile: action(async (columns) => {
+saveFile: action(async () => {
   if (!Store.currentPackageId) {
     Swal.fire("No package selected", "Use Save As first to create a package.", "warning");
     return;
   }
 
   try {
-    const snap = Store.buildSnapshot(columns);
+    const snap = Store.buildSnapshot();
 
     // 1. Update in DB
     const updated = await Store.saveFlowToDB(Store.currentPackageId, snap, { saveAs: false });
@@ -1000,7 +1002,7 @@ saveFile: action(async (columns) => {
 }),
 
 // ------------------ Save As (Create new package) ------------------
-saveFileAs: action(async (columns) => {
+saveFileAs: action(async () => {
   const { value: packageId } = await Swal.fire({
     title: "Save As",
     input: "text",
@@ -1012,7 +1014,7 @@ saveFileAs: action(async (columns) => {
   if (!packageId) return;
 
   try {
-    const snap = Store.buildSnapshot(columns);
+    const snap = Store.buildSnapshot();
 
     // 1. Save new package in DB
     const created = await Store.saveFlowToDB(packageId, snap, { saveAs: true });

@@ -12,7 +12,7 @@ import { observer } from "mobx-react";
 import { FaPlus, FaMinus, FaExpandArrowsAlt } from "react-icons/fa";
 import { useEffect } from "react";
 import Store from "../../Store";
-export const Rules = ({columns,setColumns,globalId,setGlobalId,handleAddGroup}) =>{
+export const Rules = observer(({globalId,setGlobalId,handleAddGroup}) =>{
  const tablerow = [
     
     "ConditionSetId",
@@ -311,286 +311,286 @@ const popupSections = {
 
 const editvalue = async (id, attribute) => {
 
-  const column = columns.find((c) => c.id === id);
-if (!column) return;
+//   const column = columns.find((c) => c.id === id);
+// if (!column) return;
 
 
-const row = {};
-let oldSelectAttribute = "";
+// const row = {};
+// let oldSelectAttribute = "";
 
-column.tasks.forEach((task) => {
-  Object.entries(task).forEach(([key, value]) => {
-    row[key] = value;
-    if (key === "SelectAttribute") oldSelectAttribute = value;
-  });
-});
+// column.tasks.forEach((task) => {
+//   Object.entries(task).forEach(([key, value]) => {
+//     row[key] = value;
+//     if (key === "SelectAttribute") oldSelectAttribute = value;
+//   });
+// });
 
-// 3️⃣ Determine new value
-let newValue = "";
+// // 3️⃣ Determine new value
+// let newValue = "";
 
-// When user edits SelectAttribute
-if (attribute === "SelectAttribute") {
-  newValue =
-    document.getElementById("SelectAttributeTrigger")
-      ?.getAttribute("data-value") || "";
-} 
-
-
-
-  // If attribute unknown, fallback to ConditionId
-  if (!popupSections[attribute]) attribute = "ConditionId";
-
-  // Build full HTML with styles (keeps your original style block)
-  const html = `
-    <div style="padding: 0;">
-      ${popupSections[attribute](row)}
-    </div>
-
-    <style>
-      .swal-custom-popup { border-radius: 1rem !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25) !important; }
-      .swal-confirm-btn { background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important; color: white !important; border: none !important; border-radius: 0.75rem !important; padding: 0.75rem 2rem !important; font-size: 0.9375rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px -1px rgba(99,102,241,0.3) !important; }
-      .swal-confirm-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 10px 15px -3px rgba(99,102,241,0.4) !important; }
-      .swal-cancel-btn { background: white !important; color: #64748b !important; border: 2px solid #e2e8f0 !important; border-radius: 0.75rem !important; padding: 0.75rem 2rem !important; font-size: 0.9375rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s ease !important; margin-right: 0.75rem !important; }
-      @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-      .dropdown-list::-webkit-scrollbar { width: 6px; }
-      .dropdown-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-      .dropdown-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-      .dropdown-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
-  `;
-
-  const { value: formValues } = await Swal.fire({
-    title:
-      `<div style="color:#1e293b;font-weight:700;font-size:1.25rem;margin-bottom:0.25rem;">Edit ${attribute.replace(/([A-Z])/g,' $1').trim()}</div>`,
-    html,
-    showCancelButton: true,
-    confirmButtonText: "Update Rule",
-    cancelButtonText: "Cancel",
-    customClass: {
-      popup: "swal-custom-popup",
-      confirmButton: "swal-confirm-btn",
-      cancelButton: "swal-cancel-btn",
-    },
-    buttonsStyling: false,
-    width: "600px",
-    padding: "1.5rem",
-    background: "#ffffff",
-    backdrop: "rgba(0, 0, 0, 0.4)",
-    didOpen: () => {
-      // Attach handlers only for the fields present in this popup
-      // Dropdown helper:
-      const attachDropdown = (field, sourceArrayGetter, fetchOnOpen) => {
-        const trigger = document.getElementById(`${field}Trigger`);
-        const list = document.getElementById(`${field}List`);
-        const text = document.getElementById(`${field}Text`);
-        const arrow = trigger?.querySelector(".dropdown-arrow");
-
-        if (!trigger || !list) return;
-
-        trigger.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          const isOpen = list.style.display === "block";
-          document.querySelectorAll(".dropdown-list").forEach((el) => (el.style.display = "none"));
-          document.querySelectorAll(".dropdown-arrow").forEach((a) => (a.style.transform = "rotate(0deg)"));
-          // Append dropdown to body
-  if (!list.parentElement || list.parentElement !== document.body) {
-    document.body.appendChild(list);
-  }
-
-  // Compute position relative to trigger
-  const rect = trigger.getBoundingClientRect();
-  list.style.position = "absolute";
-  list.style.top = `${rect.bottom + window.scrollY + 5}px`;
-  list.style.left = `${rect.left + window.scrollX}px`;
-  list.style.width = `${rect.width}px`;
-  list.style.display = list.style.display === "block" ? "none" : "block";
-
-  if (arrow) arrow.style.transform = list.style.display === "block" ? "rotate(180deg)" : "rotate(0deg)";
+// // When user edits SelectAttribute
+// if (attribute === "SelectAttribute") {
+//   newValue =
+//     document.getElementById("SelectAttributeTrigger")
+//       ?.getAttribute("data-value") || "";
+// } 
 
 
 
-          // If fetchOnOpen is true (SelectValue), compute values based on SelectAttribute
-          if (fetchOnOpen && !isOpen) {
-            // Determine selected attribute
-    //         let selectedAttr =
-    // document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
-    // "";
+//   // If attribute unknown, fallback to ConditionId
+//   if (!popupSections[attribute]) attribute = "ConditionId";
 
-  // 2️⃣ Fallback to Store.columns if UI has nothing
+//   // Build full HTML with styles (keeps your original style block)
+//   const html = `
+//     <div style="padding: 0;">
+//       ${popupSections[attribute](row)}
+//     </div>
+
+//     <style>
+//       .swal-custom-popup { border-radius: 1rem !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25) !important; }
+//       .swal-confirm-btn { background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%) !important; color: white !important; border: none !important; border-radius: 0.75rem !important; padding: 0.75rem 2rem !important; font-size: 0.9375rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s ease !important; box-shadow: 0 4px 6px -1px rgba(99,102,241,0.3) !important; }
+//       .swal-confirm-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 10px 15px -3px rgba(99,102,241,0.4) !important; }
+//       .swal-cancel-btn { background: white !important; color: #64748b !important; border: 2px solid #e2e8f0 !important; border-radius: 0.75rem !important; padding: 0.75rem 2rem !important; font-size: 0.9375rem !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.2s ease !important; margin-right: 0.75rem !important; }
+//       @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+//       .dropdown-list::-webkit-scrollbar { width: 6px; }
+//       .dropdown-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+//       .dropdown-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+//       .dropdown-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+//     </style>
+//   `;
+
+//   const { value: formValues } = await Swal.fire({
+//     title:
+//       `<div style="color:#1e293b;font-weight:700;font-size:1.25rem;margin-bottom:0.25rem;">Edit ${attribute.replace(/([A-Z])/g,' $1').trim()}</div>`,
+//     html,
+//     showCancelButton: true,
+//     confirmButtonText: "Update Rule",
+//     cancelButtonText: "Cancel",
+//     customClass: {
+//       popup: "swal-custom-popup",
+//       confirmButton: "swal-confirm-btn",
+//       cancelButton: "swal-cancel-btn",
+//     },
+//     buttonsStyling: false,
+//     width: "600px",
+//     padding: "1.5rem",
+//     background: "#ffffff",
+//     backdrop: "rgba(0, 0, 0, 0.4)",
+//     didOpen: () => {
+//       // Attach handlers only for the fields present in this popup
+//       // Dropdown helper:
+//       const attachDropdown = (field, sourceArrayGetter, fetchOnOpen) => {
+//         const trigger = document.getElementById(`${field}Trigger`);
+//         const list = document.getElementById(`${field}List`);
+//         const text = document.getElementById(`${field}Text`);
+//         const arrow = trigger?.querySelector(".dropdown-arrow");
+
+//         if (!trigger || !list) return;
+
+//         trigger.addEventListener("click", async (e) => {
+//           e.stopPropagation();
+//           const isOpen = list.style.display === "block";
+//           document.querySelectorAll(".dropdown-list").forEach((el) => (el.style.display = "none"));
+//           document.querySelectorAll(".dropdown-arrow").forEach((a) => (a.style.transform = "rotate(0deg)"));
+//           // Append dropdown to body
+//   if (!list.parentElement || list.parentElement !== document.body) {
+//     document.body.appendChild(list);
+//   }
+
+//   // Compute position relative to trigger
+//   const rect = trigger.getBoundingClientRect();
+//   list.style.position = "absolute";
+//   list.style.top = `${rect.bottom + window.scrollY + 5}px`;
+//   list.style.left = `${rect.left + window.scrollX}px`;
+//   list.style.width = `${rect.width}px`;
+//   list.style.display = list.style.display === "block" ? "none" : "block";
+
+//   if (arrow) arrow.style.transform = list.style.display === "block" ? "rotate(180deg)" : "rotate(0deg)";
+
+
+
+//           // If fetchOnOpen is true (SelectValue), compute values based on SelectAttribute
+//           if (fetchOnOpen && !isOpen) {
+//             // Determine selected attribute
+//     //         let selectedAttr =
+//     // document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
+//     // "";
+
+//   // 2️⃣ Fallback to Store.columns if UI has nothing
   
 
-   // Find the column that contains the clicked task
-const column = columns.find((col) =>
-  col.tasks.some((t) => t.id === id)
-);
+//    // Find the column that contains the clicked task
+// const column = columns.find((col) =>
+//   col.tasks.some((t) => t.id === id)
+// );
 
-if (!column) return;
+// if (!column) return;
 
-// 1️⃣ Find ONLY the task that was clicked
-const selectedTask = column.tasks.find((t) => t.id === id);
+// // 1️⃣ Find ONLY the task that was clicked
+// const selectedTask = column.tasks.find((t) => t.id === id);
 
-if (!selectedTask) return;
+// if (!selectedTask) return;
 
-// 2️⃣ Use only this task's SelectAttribute
-if (selectedTask.SelectAttribute) {
-  Store.selectedvalue = selectedTask.SelectAttribute;
-  alert(Store.selectedvalue);   // ✅ only one alert now
-}
+// // 2️⃣ Use only this task's SelectAttribute
+// if (selectedTask.SelectAttribute) {
+//   Store.selectedvalue = selectedTask.SelectAttribute;
+//   alert(Store.selectedvalue);   // ✅ only one alert now
+// }
 
-// 3️⃣ Auto-reset SelectValue only for this task
-if (
-  selectedTask.SelectValue &&
-  newValue !== oldSelectAttribute
-) {
-  selectedTask.SelectValue = "Edit SelectValue";
-}
+// // 3️⃣ Auto-reset SelectValue only for this task
+// if (
+//   selectedTask.SelectValue &&
+//   newValue !== oldSelectAttribute
+// ) {
+//   selectedTask.SelectValue = "Edit SelectValue";
+// }
 
 
-            // fetch values (your original fetch logic)
-            try {
-              const res = await fetch(`http://localhost:4000/values/${encodeURIComponent(Store.selectedvalue)}`);
-              const result = await res.json();
-              let arr = [];
-              if (Array.isArray(result)) arr = result;
-              else if (result?.values) arr = result.values;
-              Store.selectedArray = arr;
+//             // fetch values (your original fetch logic)
+//             try {
+//               const res = await fetch(`http://localhost:4000/values/${encodeURIComponent(Store.selectedvalue)}`);
+//               const result = await res.json();
+//               let arr = [];
+//               if (Array.isArray(result)) arr = result;
+//               else if (result?.values) arr = result.values;
+//               Store.selectedArray = arr;
 
-              if (arr.length === 0) {
-                list.innerHTML = `<div style="padding:10px; color:#94a3b8">No values found</div>`;
-              } else {
-                list.innerHTML = arr.map(v => `
-                  <div class="dropdown-option" data-value="${v}" style="padding:.75rem 1rem; cursor:pointer; color:#334155">
-                    ${v}
-                  </div>
-                `).join('');
-              }
+//               if (arr.length === 0) {
+//                 list.innerHTML = `<div style="padding:10px; color:#94a3b8">No values found</div>`;
+//               } else {
+//                 list.innerHTML = arr.map(v => `
+//                   <div class="dropdown-option" data-value="${v}" style="padding:.75rem 1rem; cursor:pointer; color:#334155">
+//                     ${v}
+//                   </div>
+//                 `).join('');
+//               }
 
-              // attach click events
-              list.querySelectorAll(".dropdown-option").forEach((opt) => {
-                opt.addEventListener("click", () => {
-                  text.textContent = opt.textContent || "";
-                  trigger.setAttribute("data-value", opt.getAttribute("data-value"));
-                  list.style.display = "none";
-                  if (arrow) arrow.style.transform = "rotate(0deg)";
-                });
-              });
+//               // attach click events
+//               list.querySelectorAll(".dropdown-option").forEach((opt) => {
+//                 opt.addEventListener("click", () => {
+//                   text.textContent = opt.textContent || "";
+//                   trigger.setAttribute("data-value", opt.getAttribute("data-value"));
+//                   list.style.display = "none";
+//                   if (arrow) arrow.style.transform = "rotate(0deg)";
+//                 });
+//               });
 
-            } catch (err) {
-              console.error("Error fetching values:", err);
-              list.innerHTML = `<div style="padding:10px; color:#94a3b8">Error loading values</div>`;
-            }
-          }
-        });
+//             } catch (err) {
+//               console.error("Error fetching values:", err);
+//               list.innerHTML = `<div style="padding:10px; color:#94a3b8">Error loading values</div>`;
+//             }
+//           }
+//         });
 
-        // Attach pre-existing options click (for static lists)
-        list.querySelectorAll(".dropdown-option").forEach((opt) => {
-          opt.addEventListener("click", () => {
-            if (text) text.textContent = opt.textContent || "";
-            if (text) text.style.color = "#1e293b";
-            if (trigger) trigger.setAttribute("data-value", opt.getAttribute("data-value") || "");
-            if (list) list.style.display = "none";
-            if (arrow) arrow.style.transform = "rotate(0deg)";
-          });
-        });
+//         // Attach pre-existing options click (for static lists)
+//         list.querySelectorAll(".dropdown-option").forEach((opt) => {
+//           opt.addEventListener("click", () => {
+//             if (text) text.textContent = opt.textContent || "";
+//             if (text) text.style.color = "#1e293b";
+//             if (trigger) trigger.setAttribute("data-value", opt.getAttribute("data-value") || "");
+//             if (list) list.style.display = "none";
+//             if (arrow) arrow.style.transform = "rotate(0deg)";
+//           });
+//         });
 
-        // Close when clicking outside
-        document.addEventListener("click", (e) => {
-          if (trigger && list && !trigger.contains(e.target) && !list.contains(e.target)) {
-            list.style.display = "none";
-            if (arrow) arrow.style.transform = "rotate(0deg)";
-          }
-        });
-      };
+//         // Close when clicking outside
+//         document.addEventListener("click", (e) => {
+//           if (trigger && list && !trigger.contains(e.target) && !list.contains(e.target)) {
+//             list.style.display = "none";
+//             if (arrow) arrow.style.transform = "rotate(0deg)";
+//           }
+//         });
+//       };
 
-      // Attach dropdowns only if those elements exist
-      if (document.getElementById("SelectAttributeTrigger")) {
-        attachDropdown("SelectAttribute", () => Store.columns || [], false);
-      }
-      if (document.getElementById("ConditionTrigger")) {
-        attachDropdown("Condition", () => ["equals","not equals","greater than","less than","contains"], false);
-      }
-      if (document.getElementById("SelectValueTrigger")) {
-        // fetchOnOpen = true so it loads based on SelectAttribute
-        attachDropdown("SelectValue", () => Store.selectedArray || [], true);
-      }
+//       // Attach dropdowns only if those elements exist
+//       if (document.getElementById("SelectAttributeTrigger")) {
+//         attachDropdown("SelectAttribute", () => Store.columns || [], false);
+//       }
+//       if (document.getElementById("ConditionTrigger")) {
+//         attachDropdown("Condition", () => ["equals","not equals","greater than","less than","contains"], false);
+//       }
+//       if (document.getElementById("SelectValueTrigger")) {
+//         // fetchOnOpen = true so it loads based on SelectAttribute
+//         attachDropdown("SelectValue", () => Store.selectedArray || [], true);
+//       }
 
       
 
-      const flagSwitch = document.getElementById("flagSwitch");
-const flagLabel = document.getElementById("flagLabel");
+//       const flagSwitch = document.getElementById("flagSwitch");
+// const flagLabel = document.getElementById("flagLabel");
 
-flagSwitch?.addEventListener("change", () => {
-  if (flagLabel) {
-    flagLabel.textContent = flagSwitch.checked ? "True" : "False";
-    flagLabel.style.color = flagSwitch.checked ? "#6366f1" : "#64748b";
-  }
-});
+// flagSwitch?.addEventListener("change", () => {
+//   if (flagLabel) {
+//     flagLabel.textContent = flagSwitch.checked ? "True" : "False";
+//     flagLabel.style.color = flagSwitch.checked ? "#6366f1" : "#64748b";
+//   }
+// });
 
-    },
-    preConfirm: () => {
-      return {
-        ConditionId: document.getElementById("condId")?.value || "",
-        SelectAttribute:
-          document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
-          document.getElementById("SelectAttributeText")?.textContent?.trim() ||
-          "",
-        Condition:
-          document.getElementById("ConditionTrigger")?.getAttribute("data-value") ||
-          document.getElementById("ConditionText")?.textContent?.trim() ||
-          "",
-        SelectValue:
-          document.getElementById("SelectValueTrigger")?.getAttribute("data-value") ||
-          document.getElementById("SelectValueText")?.textContent?.trim() || "",
-         Flag: document.getElementById("flagSwitch")?.checked ? "True" : "False",
-      };
-    }
-  });
+//     },
+//     preConfirm: () => {
+//       return {
+//         ConditionId: document.getElementById("condId")?.value || "",
+//         SelectAttribute:
+//           document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
+//           document.getElementById("SelectAttributeText")?.textContent?.trim() ||
+//           "",
+//         Condition:
+//           document.getElementById("ConditionTrigger")?.getAttribute("data-value") ||
+//           document.getElementById("ConditionText")?.textContent?.trim() ||
+//           "",
+//         SelectValue:
+//           document.getElementById("SelectValueTrigger")?.getAttribute("data-value") ||
+//           document.getElementById("SelectValueText")?.textContent?.trim() || "",
+//          Flag: document.getElementById("flagSwitch")?.checked ? "True" : "False",
+//       };
+//     }
+//   });
 
-  // 1️⃣ Find the column that contains this task id
-const column1 = columns.find((col) =>
-  col.tasks.some((t) => t.id === id)
-);
+//   // 1️⃣ Find the column that contains this task id
+// const column1 = columns.find((col) =>
+//   col.tasks.some((t) => t.id === id)
+// );
 
-if (!column1) return;
+// if (!column1) return;
 
-// 2️⃣ Build new updatedColumns array
-const updatedColumns = columns.map((col) => {
+// // 2️⃣ Build new updatedColumns array
+// const updatedColumns = columns.map((col) => {
 
-  // If this column does NOT contain the task → return as-is
-  const containsTask = col.tasks.some((t) => t.id === id);
-  if (!containsTask) return col;
+//   // If this column does NOT contain the task → return as-is
+//   const containsTask = col.tasks.some((t) => t.id === id);
+//   if (!containsTask) return col;
 
-  // 3️⃣ Update ONLY the matched task inside this column
-  const updatedTasks = col.tasks.map((task) => {
-    if (task.id !== id) return task; // untouched task
+//   // 3️⃣ Update ONLY the matched task inside this column
+//   const updatedTasks = col.tasks.map((task) => {
+//     if (task.id !== id) return task; // untouched task
 
-    // Safe clone
-    const updatedTask = { ...task };
+//     // Safe clone
+//     const updatedTask = { ...task };
 
-    // Apply only the fields sent from popup
-    Object.keys(formValues).forEach((label) => {
-      const value = formValues[label];
+//     // Apply only the fields sent from popup
+//     Object.keys(formValues).forEach((label) => {
+//       const value = formValues[label];
 
-      // ⛔ Value is empty? DO NOT CLEAR ORIGINAL VALUE
-      if (value === null || value === undefined || value === "") return;
+//       // ⛔ Value is empty? DO NOT CLEAR ORIGINAL VALUE
+//       if (value === null || value === undefined || value === "") return;
 
-      // Set the new value
-      updatedTask[label] = value;
-    });
+//       // Set the new value
+//       updatedTask[label] = value;
+//     });
 
-    return updatedTask;
-  });
+//     return updatedTask;
+//   });
 
-  return {
-    ...col,
-    tasks: updatedTasks,
-  };
-});
+//   return {
+//     ...col,
+//     tasks: updatedTasks,
+//   };
+// });
 
-// 4️⃣ Set the new columns (UI refresh)
-setColumns(updatedColumns);
+// // 4️⃣ Set the new columns (UI refresh)
+// setColumns(updatedColumns);
 
-Store.selectedvalue = "" ;
+// Store.selectedvalue = "" ;
 
   
 };
@@ -598,7 +598,7 @@ Store.selectedvalue = "" ;
 
   
   const handleDeleteRule = async (columnId, taskId) => {
-  const column = columns.find((col) => col.id === columnId);
+  const column = Store.column.find((col) => col.id === columnId);
   if (!column) return;
 
   const task = column.tasks.find((t) => t.id === taskId);
@@ -617,13 +617,13 @@ Store.selectedvalue = "" ;
   });
 
   if (result.isConfirmed) {
-    // 🧹 Update column tasks
-    const updatedColumns = columns
+    // 🧹 Update MobX columns
+    const updatedColumns = Store.column
       .map((col) => {
         if (col.id === columnId) {
           const updatedTasks = col.tasks.filter((t) => t.id !== taskId);
 
-          // ⚠️ If no tasks left, remove this column completely
+          // ⚠️ Remove the entire column if task is empty
           if (updatedTasks.length === 0) {
             return null;
           }
@@ -634,8 +634,9 @@ Store.selectedvalue = "" ;
       })
       .filter((col) => col !== null); // remove empty columns
 
-     setColumns(updatedColumns);
-
+    // 🔥 MobX replace
+    Store.column = updatedColumns;
+   alert(JSON.stringify(Store.column))
     Swal.fire({
       title: "Deleted!",
       text: "The rule has been deleted successfully.",
@@ -644,6 +645,7 @@ Store.selectedvalue = "" ;
     });
   }
 };
+
 
 
 const deleteGroup = async (columnId) => {
@@ -661,7 +663,8 @@ const deleteGroup = async (columnId) => {
 
   if (result.isConfirmed) {
     // 🗑️ Remove the column by filtering it out
-   setColumns((prevColumns) => prevColumns.filter((col) => col.id !== columnId));
+   Store.column = Store.column.filter((col) => col.id !== columnId);
+
 
 
     // ✅ Success message
@@ -680,27 +683,28 @@ const deleteGroup = async (columnId) => {
   // ➕ Add new rule inside specific group
   const addRuleInsideGroup = (groupId) => {
     
-   setColumns((prev) =>
-      prev.map((col) => {
-        if (col.id === groupId && col.type === "group") {
-          const newRule = {
-            id: `task-${globalId}`,
-            ConditionSetId: `ConditionSetId${globalId}`,
-            RuleId: `RuleId${globalId}`,
-            ConditionId: "Edit ConditionId",
-                  SelectAttribute: "Edit SelectAttribute",
-                  Condition: "Edit Condition",
-                  SelectValue: "Edit Value",
-                  Flag: "Edit Flag",
-                  Actions: "Edit Actions",
-            ruleorgroup: "rule",
-          };
-          setGlobalId((id) => id + 1);
-          return { ...col, tasks: [...col.tasks, newRule] };
-        }
-        return col;
-      })
-    );
+   Store.column = Store.column.map((col) => {
+  if (col.id === groupId && col.type === "group") {
+    const newRule = {
+      id: `task-${globalId}`,
+      ConditionSetId: `ConditionSetId${globalId}`,
+      RuleId: `RuleId${globalId}`,
+      ConditionId: "Edit ConditionId",
+      SelectAttribute: "Edit SelectAttribute",
+      Condition: "Edit Condition",
+      SelectValue: "Edit Value",
+      Flag: "Edit Flag",
+      Actions: "Edit Actions",
+      ruleorgroup: "rule",
+    };
+
+    setGlobalId((id) => id + 1);
+
+    return { ...col, tasks: [...col.tasks, newRule] };
+  }
+  return col;
+});
+
   };
 
   // 🧱 Drag handling
@@ -719,38 +723,37 @@ const deleteGroup = async (columnId) => {
   const isTaskDrag = activeId.startsWith("task-");
 
   if (isColumnDrag) {
-    // 🧱 Move entire column
-    setColumns((prev) => {
-      const oldIndex = prev.findIndex((c) => c.id === active.id);
-      const newIndex = prev.findIndex((c) => c.id === over.id);
-      return arrayMove(prev, oldIndex, newIndex);
-    });
+    const oldIndex = Store.column.findIndex((c) => c.id === active.id);
+const newIndex = Store.column.findIndex((c) => c.id === over.id);
+
+Store.column = arrayMove(Store.column, oldIndex, newIndex);
+
 
     return;
   }
 
   if (isTaskDrag) {
     // 🔧 Move rule inside a group only
-   setColumns((prev) =>
-      prev.map((col) => {
-        const activeIndex = col.tasks.findIndex((t) => t.id === active.id);
-        const overIndex = col.tasks.findIndex((t) => t.id === over.id);
-        if (activeIndex !== -1 && overIndex !== -1) {
-          const newTasks = arrayMove(col.tasks, activeIndex, overIndex);
-          return { ...col, tasks: newTasks };
-        }
-        return col;
-      })
-    );
+   Store.column = Store.column.map((col) => {
+  const activeIndex = col.tasks.findIndex((t) => t.id === active.id);
+  const overIndex = col.tasks.findIndex((t) => t.id === over.id);
+
+  if (activeIndex !== -1 && overIndex !== -1) {
+    const newTasks = arrayMove(col.tasks, activeIndex, overIndex);
+    return { ...col, tasks: newTasks };
+  }
+
+  return col;
+});
+
   }
 };
 
   const toggleCollapse = (groupId) => {
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === groupId ? { ...col, collapsed: !col.collapsed } : col
-      )
-    );  };
+    Store.column= Store.column.map((col) =>
+  col.id === groupId ? { ...col, collapsed: !col.collapsed } : col
+);
+ };
 
     return (
         <div style={{ padding: "20px" ,width: "80%",background: "#f2f2f3"}}>
@@ -781,7 +784,7 @@ const deleteGroup = async (columnId) => {
         <button
           className="px-3 py-2 rounded-md"
           style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={() => Store.saveFile(columns)}
+          onClick={() => Store.saveFile()}
         >
           Save
         </button>
@@ -789,7 +792,7 @@ const deleteGroup = async (columnId) => {
         <button
           className="px-3 py-2 rounded-md"
           style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={() => Store.saveFileAs(columns)}
+          onClick={() => Store.saveFileAs()}
         >
           Save As
         </button>
@@ -797,7 +800,7 @@ const deleteGroup = async (columnId) => {
         <button
           className="px-3 py-2 rounded-md"
           style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={() => Store.downloadLastExport(columns)}
+          onClick={() => Store.downloadLastExport()}
         >
           Download
         </button>
@@ -837,10 +840,10 @@ const deleteGroup = async (columnId) => {
         >
           
 <SortableContext
- items={columns.map((c) => c.id)}               
+ items={Store.column.map((c) => c.id)}               
   strategy={verticalListSortingStrategy}        
 >
-  {columns.map((col) => (
+  {Store.column.map((col) => (
     
     <SortableContext
       key={col.id}
@@ -850,7 +853,7 @@ const deleteGroup = async (columnId) => {
       <Columndata
         key={col.id}
         column={col}
-        setColumns={setColumns}
+      
         addRuleInsideGroup={addRuleInsideGroup}
         editvalue={editvalue}
         handleDeleteRule={handleDeleteRule}
@@ -870,4 +873,4 @@ const deleteGroup = async (columnId) => {
 
 
     )
-}
+})

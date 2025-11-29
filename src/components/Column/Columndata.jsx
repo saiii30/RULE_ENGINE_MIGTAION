@@ -6,9 +6,11 @@ import { MdOutlineExpandLess } from "react-icons/md";
 import { MdOutlineExpandMore } from "react-icons/md";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { observer } from "mobx-react";
+import Store from "../../Store";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
-export const Columndata = ({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse,setColumns,editvalue }) => {
+export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse,editvalue }) => {
 
 const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -42,11 +44,9 @@ const { attributes, listeners, setNodeRef, transform, transition } =
 
   // ✅ If user entered a valid name, update the column in state
   if (Name) {
-    setColumns((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === columnId ? { ...col, name: Name.trim() } : col
-      )
-    );
+    Store.column = Store.column.map(col =>
+  col.id === columnId ? { ...col, name: Name.trim() } : col
+);
 
     // ✅ Success message
     Swal.fire({
@@ -187,4 +187,4 @@ const { attributes, listeners, setNodeRef, transform, transition } =
      
     </div>
   );
-};
+});
