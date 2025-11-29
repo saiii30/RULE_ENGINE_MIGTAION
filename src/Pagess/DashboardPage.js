@@ -1,8 +1,13 @@
 // src/Pagess/DashboardPage.js
 import { useNavigate } from "react-router-dom";
 import Store from "../Store";
+import { use } from "react";
+import { useState } from "react";
+import PackagesPanel from "../Component/PackagesPanel";
 
 const DashboardPage = () => {
+
+  const[visibile,setVisible] = useState(false);
   const navigate = useNavigate();
 
   // 🧹 Create New Rule → must clear all old rules
@@ -31,7 +36,7 @@ const DashboardPage = () => {
   // 📜 Previous Rules → only load saved rules
   const handlePreviousRules = () => {
     sessionStorage.setItem("mode", "previous");
-    navigate("/previous-rules");
+    setVisible(true);
   };
 
   return (
@@ -53,6 +58,13 @@ const DashboardPage = () => {
           </button>
         </div>
       </div>
+
+      {
+        visibile && (
+          <PackagesPanel/>
+
+        )
+      }
     </div>
   );
 };

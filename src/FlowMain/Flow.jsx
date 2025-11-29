@@ -35,7 +35,7 @@ const [columns, setColumns] = useState([]);
 
       useEffect(() => {
     // make sure autosave is running
-    Store.setupAutosave();
+    Store.setupAutosave(columns);
     // try to restore the current dashboard/user save
     Store.restoreFlow();
   }, []);

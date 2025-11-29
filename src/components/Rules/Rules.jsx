@@ -781,7 +781,7 @@ const deleteGroup = async (columnId) => {
         <button
           className="px-3 py-2 rounded-md"
           style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={Store.saveFile}
+          onClick={() => Store.saveFile(columns)}
         >
           Save
         </button>
@@ -789,7 +789,7 @@ const deleteGroup = async (columnId) => {
         <button
           className="px-3 py-2 rounded-md"
           style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={Store.saveFileAs}
+          onClick={() => Store.saveFileAs(columns)}
         >
           Save As
         </button>
@@ -797,7 +797,7 @@ const deleteGroup = async (columnId) => {
         <button
           className="px-3 py-2 rounded-md"
           style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={Store.downloadLastExport}
+          onClick={() => Store.downloadLastExport(columns)}
         >
           Download
         </button>

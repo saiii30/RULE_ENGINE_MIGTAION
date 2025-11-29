@@ -174,6 +174,7 @@ const { attributes, listeners, setNodeRef, transform, transition } =
                   columnId={column.id}
                   editvalue={editvalue}
                   handleDeleteRule={handleDeleteRule}
+                  sortableProps={{ setNodeRef, attributes, listeners, transform, transition }}
                 />
               ))}
             </SortableContext>

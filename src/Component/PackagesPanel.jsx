@@ -32,14 +32,18 @@ const PackagesPanel = observer(() => {
               className="p-2 bg-white border rounded shadow-sm flex flex-col"
             >
               <div className="flex justify-between items-center">
-                <span className="font-semibold">{pkg.packageId}</span>
+                <span className="font-semibold" style={{cursor : "pointer"}} onClick={async () => {
+    const pkg1 = await axios.get(`http://localhost:4000/api/flows/${pkg.packageId}`);
+    Store.applySnapshot(pkg1.data.snapshot); // restore flow in canvas
+    Swal.fire("Restored", `${pkg.packageId} loaded`, "success");
+  }}>{pkg.packageId}</span>
                 <span className="text-xs text-gray-500">
                   {new Date(pkg.createdAt).toLocaleString()}
                 </span>
               </div>
-              <div className="text-xs text-gray-600">{pkg.notes}</div>
+              <div style={{cursor : "pointer"}} className="text-xs text-gray-600" >{pkg.notes}</div>
               <div className="flex gap-2 mt-2">
-               <button
+               {/* <button
   className="px-2 py-1 bg-green-500 text-white rounded"
   onClick={async () => {
     const pkg = await axios.get(`http://localhost:4000/api/flows/${pkg._id}`);
@@ -48,9 +52,9 @@ const PackagesPanel = observer(() => {
   }}
 >
   Restore
-</button>
+</button> */}
 
-                <button
+                {/* <button
                   className="px-2 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
                   onClick={() => {
                     const blob = new Blob(
@@ -64,7 +68,7 @@ const PackagesPanel = observer(() => {
                   }}
                 >
                   Download
-                </button>
+                </button> */}
               </div>
             </li>
           ))}
