@@ -8,6 +8,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { observer } from "mobx-react";
 import Store from "../../Store";
+import { useState } from "react";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
 export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse,editvalue }) => {
@@ -18,9 +19,12 @@ const { attributes, listeners, setNodeRef, transform, transition } =
     });
 
     const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-      };
+    transform: CSS.Transform.toString(transform),
+    transition,
+    
+  };
+
+  const[value,setvalue] = useState("")
   const editGroupName = async (columnId) => {
   const { value: Name } = await Swal.fire({
     title: `<div style="color:#1e293b; font-weight:700; font-size:1.3rem;">Edit Group Name</div>`,
@@ -58,6 +62,66 @@ const { attributes, listeners, setNodeRef, transform, transition } =
   }
 };
 
+
+const setconditon = async(id) => {
+
+  Swal.fire({
+  title: "Choose Condition",
+  html: `
+    <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
+      <button id="andBtn" class="swal2-confirm swal2-styled" style="padding:10px 20px;">
+        AND
+      </button>
+      <button id="orBtn" class="swal2-cancel swal2-styled" style="padding:10px 20px;">
+        OR
+      </button>
+    </div>
+  `,
+  showConfirmButton: false,
+  showCancelButton: false,
+  didOpen: () => {
+    document.getElementById("andBtn").onclick = () => {
+      Swal.close();
+      console.log("AND selected");
+      alert("and")
+      setvalue("AND")
+    };
+
+    document.getElementById("orBtn").onclick = () => {
+      Swal.close();
+      console.log("OR selected");
+      alert("or")
+      setvalue("OR")
+      // your logic here
+    };
+  }
+});
+
+
+
+ alert("hii")
+  // Find the matching column
+  const updated = Store.column.map((col) => {
+    if (col.id === id) {
+      return {
+        ...col,
+        condition: value  // <-- set AND / OR here
+      };
+      ;
+    }
+    
+    return col;
+  });
+
+  Store.column = updated;
+
+  console.log(updated)
+ 
+  
+}
+
+
+
   return (
      <div style={style} className="column" >
       {/* <h4>{column.name}</h4> */}
@@ -69,14 +133,10 @@ const { attributes, listeners, setNodeRef, transform, transition } =
 <div style={{display : "flex", cursor: "grab" }}>
 
   {
-    column.type !== "rule" ? ( 
+    column.type != "rule" &&
       <GripVertical size={18} ref={setNodeRef}  {...attributes} {...listeners}/>
 
-    )
-     : 
-     (
-      <GripVertical style={{position : "absolute",top : "24px",right : "-10px"}} size={18} ref={setNodeRef}  {...attributes} {...listeners}/>
-     )
+    
 
   }
         
@@ -100,7 +160,19 @@ const { attributes, listeners, setNodeRef, transform, transition } =
       <div>
         {column.type === "group" && (
 
-        <div style={{display : "flex" , width : "600px",justifyContent : "space-evenly"}}>
+        <div style={{display : "flex" , width : "600px",justifyContent : "space-evenly",position : "relative"}}>
+
+
+            <button
+        className="btn"
+         style={{width : "120px",position : "absolute",zIndex : "12",right : "842px"}}
+         onPointerDown={(e) => e.stopPropagation()}
+
+          onClick={()=>setconditon(column.id)}
+        >
+           Add Condition
+        </button>
+
           <button
         className="btn"
          style={{width : "100px"}}

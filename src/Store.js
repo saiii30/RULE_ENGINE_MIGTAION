@@ -830,6 +830,8 @@ buildSnapshot() {
 
 // ---- C.4 Apply a snapshot back into the store ----
 applySnapshot(snap) {
+
+  Store.clear();
   runInAction(() => {
    
     this.ruleIdsPerGroup = snap.ruleIdsPerGroup || {};

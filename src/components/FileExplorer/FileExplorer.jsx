@@ -186,7 +186,7 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
     
 
     return (
-        <div style={{width : "15%",padding: "8px",position : "relative",background :"#1f2937",height : "100vh",color : "white",overflowY : "auto"}}>
+        <div style={{width : "15%",padding: "8px",position : "relative",background :"#1f2937",height : "100%",color : "white",overflowY : "auto"}}>
 
       {/* <button onClick={handleAddParent}>Add Parent</button> */}
       <div style={{ marginTop: 20 }}>{renderTree(Store.treedata)}</div>

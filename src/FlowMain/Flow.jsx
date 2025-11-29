@@ -33,12 +33,12 @@ const FlowDiagram = observer(() => {
           fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
       }, []);
 
-  //     useEffect(() => {
-  //   // make sure autosave is running
-  //   Store.setupAutosave(Store.column);
-  //   // try to restore the current dashboard/user save
-  //   Store.restoreFlow();
-  // }, []);
+      useEffect(() => {
+    // make sure autosave is running
+    Store.setupAutosave(Store.column);
+    // try to restore the current dashboard/user save
+    Store.restoreFlow();
+  }, []);
 
   const handleSubmit = (value) => {
         if (value === "rule") {
@@ -198,7 +198,7 @@ Store.column= [...Store.column, newColumn];
       {/* Navbar */}
       <Navbar />
 
-      <div style={{width: "100%",display : "flex"}}>
+      <div style={{width: "100%",display : "flex",height : "100%"}}>
 
         {
           popupOpen && (

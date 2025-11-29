@@ -362,6 +362,8 @@ if (attribute === "SelectAttribute") {
     </style>
   `;
 
+ 
+
   const { value: formValues } = await Swal.fire({
     title:
       `<div style="color:#1e293b;font-weight:700;font-size:1.25rem;margin-bottom:0.25rem;">Edit ${attribute.replace(/([A-Z])/g,' $1').trim()}</div>`,
@@ -548,6 +550,8 @@ flagSwitch?.addEventListener("change", () => {
       };
     }
   });
+
+   if (!formValues) return;
 
  // 1️⃣ Find the column that contains this task id
 const column1 = Store.column.find((col) =>
@@ -760,7 +764,7 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
  };
 
     return (
-        <div style={{ padding: "20px" ,width: "80%",background: "#f2f2f3"}}>
+        <div style={{ padding: "20px" ,width: "85%",background: "#f2f2f3",height : "100%"}}>
 
        <div
         style={{

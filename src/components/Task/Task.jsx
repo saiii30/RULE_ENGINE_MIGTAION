@@ -2,7 +2,7 @@ import React from "react";
 import "./Task.css";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react"; // 👈 drag icon (you can use any icon)
+import { Grab, GripVertical } from "lucide-react"; // 👈 drag icon (you can use any icon)
 import Swal from "sweetalert2";
 import { observer } from "mobx-react";
 export const Task = observer(({
@@ -15,7 +15,7 @@ export const Task = observer(({
   Condition,
   SelectValue,
   Flag,
-  Actions,
+  
   column,
   columnId,
   handleDeleteRule,
@@ -28,14 +28,13 @@ export const Task = observer(({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    cursor : Grab
   };
 
    
 
   return (
    <div
-  ref={setNodeRef}
-  style={style}
   className={column === "rule" ? "task" : "task1"}
 >
       
@@ -51,8 +50,9 @@ export const Task = observer(({
       {
 
         column === "rule" && (
-          <div  style={style} ref={sortableProps.setNodeRef} {...sortableProps.attributes} {...sortableProps.listeners}>
+          <div  style={style} ref={sortableProps.setNodeRef} {...sortableProps.attributes} {...sortableProps.listeners} className="set">
         <GripVertical size={18} />  
+         <div>{ConditionSetId}</div>
       </div>
         ) 
 
@@ -60,19 +60,21 @@ export const Task = observer(({
 
       {
         column !== "rule" && (
- <div style={{ cursor: "grab" }} {...attributes} {...listeners}>
+ <div style={style} {...attributes} {...listeners}  ref={setNodeRef} className="set"> 
         <GripVertical size={18} />
+         <div>{ConditionSetId}</div>
       </div>
         )
       }
       
-      <div>{ConditionSetId}</div>
+     
       <div>{RuleId}</div>
       <div onClick={() => editvalue(id,"ConditionId")} style={{cursor : "pointer"}}>{ConditionId}</div>
       <div onClick={() => editvalue(id,"SelectAttribute")} style={{cursor : "pointer"}}>{SelectAttribute}</div>
       <div onClick={() => editvalue(id,"Condition")} style={{cursor : "pointer"}}>{Condition}</div>
       <div onClick={() => editvalue(id,"SelectValue")} style={{cursor : "pointer"}}>{SelectValue}</div>
       <div onClick={() => editvalue(id,"Flag")} style={{cursor : "pointer"}}>{Flag}</div>
+      <div>Edit Action</div>
       
 
      <div className="actions">
