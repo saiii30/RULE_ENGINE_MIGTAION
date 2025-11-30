@@ -8,6 +8,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { observer } from "mobx-react";
 import Store from "../../Store";
+import { IoMdAdd } from "react-icons/io";
+import { MdDelete } from "react-icons/md";
 import { useState } from "react";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
@@ -129,7 +131,7 @@ const setconditon = async(id) => {
 
      <div style={{display : "flex",width : "100%",justifyContent : "space-between",alignItems : "center",position : "relative"}}>
       
-        <div style={{display : "flex",justifyContent : "space-between",alignItems : "center",height : "30px",textAlign : "center",position : "relative"}}>
+        <div style={{display : "flex",justifyContent : "space-between",alignItems : "center",height : "10px",textAlign : "center",position : "relative"}}>
 <div style={{display : "flex", cursor: "grab" }}>
 
   {
@@ -160,7 +162,7 @@ const setconditon = async(id) => {
       <div>
         {column.type === "group" && (
 
-        <div style={{display : "flex" , width : "600px",justifyContent : "space-evenly",position : "relative"}}>
+        <div style={{display : "flex" , width : "400px",justifyContent : "space-evenly",position : "relative"}}>
 
 
             <button
@@ -175,12 +177,12 @@ const setconditon = async(id) => {
 
           <button
         className="btn"
-         style={{width : "100px"}}
+         style={{width : "40px"}}
          onPointerDown={(e) => e.stopPropagation()}
 
           onClick={() => addRuleInsideGroup(column.id)}
         >
-           Add Rule
+           <IoMdAdd/>
         </button>
 
         <button
@@ -194,12 +196,12 @@ const setconditon = async(id) => {
         </button>
          <button
         className="btn"
-         style={{width : "100px"}}
+         style={{width : "40px"}}
          onPointerDown={(e) => e.stopPropagation()}
 
           onClick={() => deleteGroup(column.id)}
         >
-          Delete
+          <MdDelete/>
         </button>
         <button
         onPointerDown={(e) => e.stopPropagation()}

@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Grab, GripVertical } from "lucide-react"; // 👈 drag icon (you can use any icon)
 import Swal from "sweetalert2";
 import { observer } from "mobx-react";
+import { MdDelete } from "react-icons/md";
 export const Task = observer(({
   id,
   editvalue,
@@ -72,7 +73,16 @@ export const Task = observer(({
       <div onClick={() => editvalue(id,"ConditionId")} style={{cursor : "pointer"}}>{ConditionId}</div>
       <div onClick={() => editvalue(id,"SelectAttribute")} style={{cursor : "pointer"}}>{SelectAttribute}</div>
       <div onClick={() => editvalue(id,"Condition")} style={{cursor : "pointer"}}>{Condition}</div>
-      <div onClick={() => editvalue(id,"SelectValue")} style={{cursor : "pointer"}}>{SelectValue}</div>
+      <a 
+  onClick={() => editvalue(id, "SelectValue")} 
+  style={{ 
+    cursor: "pointer", 
+    color: "blue", 
+    textDecoration: "underline"
+  }}
+>
+  {SelectValue}
+</a>
       <div onClick={() => editvalue(id,"Flag")} style={{cursor : "pointer"}}>{Flag}</div>
       <div>Edit Action</div>
       
@@ -81,7 +91,7 @@ export const Task = observer(({
     {/* <button  onPointerDown={(e) => e.stopPropagation()}
  onClick={() => handleEditRule(columnId,id)}>Edit</button> */}
     <button style={{height : "30px"}} onPointerDown={(e) => e.stopPropagation()}
- onClick={() => handleDeleteRule(columnId,id)}>Delete</button>
+ onClick={() => handleDeleteRule(columnId,id)}><MdDelete/></button>
   </div>
 
   <style>
@@ -93,6 +103,7 @@ export const Task = observer(({
         display: flex;
         gap: 8px;
         opacity: 0;
+        
         transition: opacity 0.3s ease;
       }
 
@@ -100,6 +111,7 @@ export const Task = observer(({
       .task:hover .actions,
       .task1:hover .actions {
         opacity: 1;
+       
       }
     `}
   </style>
