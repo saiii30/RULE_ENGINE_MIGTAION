@@ -2,6 +2,7 @@ import { observable, action, runInAction, toJS } from "mobx";
 import Swal from "sweetalert2";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+
 import { reaction } from "mobx";
 
 import { saveAs } from "file-saver"; // make sure you have this at the top
@@ -25,6 +26,7 @@ const Store = observable({
   selectedArray : [],
   selectedCondition: "",
   selectedValue: "",
+  visibile : false,
 
   async login() {
     try {
@@ -830,6 +832,8 @@ buildSnapshot() {
 
 // ---- C.4 Apply a snapshot back into the store ----
 applySnapshot(snap) {
+
+  
 
   Store.clear();
   runInAction(() => {
