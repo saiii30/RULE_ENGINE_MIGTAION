@@ -102,7 +102,7 @@ const Home = observer(() => {
   const handle = () => {
      navigate("/")
     Store.nodes = []
-    Store.tablename = ""
+   
     Store.name3 = []
     Store.engines = {}
     Store.treedata = []
@@ -112,7 +112,10 @@ const Home = observer(() => {
     Store.dashboard = ""
     Store.databasename = ""
     Store.tableindex = ""
+    Store.column = []
     sessionStorage.clear();
+    localStorage.removeItem("authToken");
+  sessionStorage.removeItem("authToken");
   localStorage.clear();
     Store.username = 'Login'
     window.location.reload()
@@ -172,7 +175,7 @@ const Home = observer(() => {
         <DatabasePopup onClose={() => (Store.visibile4 = false)} />
       )}
 
-      <div className={`hidden absolute bg-white w-28 h-12 top-8 right-20 lg:items-center lg : flex lg:justify-center transition-transform duration-300 ease-in-out transform lg:flex ${Store.visible2 ? 'translate-y-full' : 'translate-y-0'}`}>
+      <div className={`hidden absolute bg-white w-28 h-12 top-8 right-20 lg:items-center lg : flex lg:justify-center transition-transform duration-300 ease-in-out transform lg:flex ${Store.visible5  ? 'translate-y-full' : 'translate-y-0'}`}>
         <h1 onClick={handle}>Logout</h1>
       </div>
     </div>

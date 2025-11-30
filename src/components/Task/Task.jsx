@@ -29,7 +29,7 @@ export const Task = observer(({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    cursor : Grab
+    
   };
 
    

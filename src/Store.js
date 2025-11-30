@@ -27,6 +27,7 @@ const Store = observable({
   selectedCondition: "",
   selectedValue: "",
   visibile : false,
+  visible5 : false,
 
   async login() {
     try {
