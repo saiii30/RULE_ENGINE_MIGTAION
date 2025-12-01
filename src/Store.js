@@ -960,7 +960,7 @@ downloadLastExport: action(async () => {
     blob = new Blob([Store.lastExportedData], { type: "application/json" });
     filename = Store.currentFileName || "package.json";
   } else if (format === "csv") {
-    const csv = Store.convertSnapshotToCSV(parsed.snapshot);
+    const csv = Store.convertSnapshotToCSV();
     blob = new Blob([csv], { type: "text/csv" });
     filename = (Store.currentFileName || "package").replace(/\.json$/, ".csv");
   } else if (format === "word") {
@@ -1043,13 +1043,33 @@ saveFileAs: action(async () => {
 
 ///////////////////////////////////////////////////changed 6th method autodownload in exportflow and added above function here/////
 
-convertSnapshotToCSV: (snap) => {
-  if (!snap || !snap.rules || snap.rules.length === 0) return "No data";
+convertSnapshotToCSV: () => {
 
-  const headers = Object.keys(snap.rules[0]); // auto-detect fields
-  const rows = snap.rules.map((rule) => headers.map((h) => rule[h] ?? ""));
-  
-  return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  let csvLines = [];
+
+  Store.treedata.forEach(root => {
+    
+    const parent = root?.name || "";
+    const child = root?.children?.[0]?.name || "";
+    const subChild = root?.children?.[0]?.children?.[0]?.name || "";
+
+    // loop every column
+    Store.column.forEach(col => {
+
+      // loop every task of that column
+      col.tasks.forEach(task => {
+        
+        const taskValues = Object.values(task).join(",");
+        csvLines.push(`${parent},${child},${subChild},${taskValues}`);
+      });
+
+    });
+
+  });
+
+  const finalCSV = csvLines.join("\n");
+
+  return finalCSV;
 },
 
 
