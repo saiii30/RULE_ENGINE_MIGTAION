@@ -52,36 +52,7 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
        Store.setTreedata(update(Store.treedata));
       };
     
-      // Popup: add child
-      const handlePopupSelect = (label) => {
-    
-        if (!selectedNode) return;
-    
-        // Stop adding children to level 2
-        if (selectedNode.level === 2) {
-          setPopupOpen(false);
-          return;
-        }
-        
-        const newChild = {
-          id: Date.now().toString(),
-          name: label,
-          children: [],
-          isOpen: true,
-          level: selectedNode.level + 1,
-        };
-    
-        const addChild = (nodes) =>
-          nodes.map((n) => {
-            if (n.id === selectedNode.id) {
-              return { ...n, children: [...n.children, newChild] };
-            }
-            return { ...n, children: addChild(n.children) };
-          });
-    
-       Store.setTreedata(addChild(Store.treedata));
-        setPopupOpen(false);
-      };
+
     
       const renderTree = (nodes, level = 0) =>
         nodes.map((node, index) => (

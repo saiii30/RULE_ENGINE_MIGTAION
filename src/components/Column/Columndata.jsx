@@ -85,15 +85,15 @@ const setconditon = async(id) => {
     document.getElementById("andBtn").onclick = () => {
       Swal.close();
       console.log("AND selected");
-      alert("and")
-      setvalue("AND")
+       updateCondition(id, "AND");   // <--- Update here
+      
     };
 
     document.getElementById("orBtn").onclick = () => {
       Swal.close();
       console.log("OR selected");
-      alert("or")
-      setvalue("OR")
+       updateCondition(id, "OR");    // <--- Update here
+      
       // your logic here
     };
   }
@@ -102,25 +102,38 @@ const setconditon = async(id) => {
 
 
 
-  // Find the matching column
-  const updated = Store.column.map((col) => {
-    if (col.id === id) {
-      return {
-        ...col,
-        condition: value  // <-- set AND / OR here
-      };
-      ;
-    }
+  // // Find the matching column
+  // const updated = Store.column.map((col) => {
+  //   if (col.id === id) {
+  //     return {
+  //       ...col,
+  //       condition: value  // <-- set AND / OR here
+  //     };
+  //     ;
+  //   }
     
-    return col;
-  });
+  //   return col;
+  // });
 
-  Store.column = updated;
+  // Store.column = updated;
 
-  console.log(updated)
+  // console.log(updated)
  
   
 }
+
+
+const updateCondition = (id, cond) => {
+
+  Store.column = Store.column.map((col) =>
+    col.id === id ? { ...col, condition: cond } : col
+  );
+
+  console.log("Updated condition:", cond);
+
+  // If using React state:
+  // setColumns([...Store.column]);
+};
 
 
 
@@ -165,15 +178,22 @@ const setconditon = async(id) => {
         <div style={{display : "flex" , width : "400px",justifyContent : "space-evenly",position : "relative"}}>
 
 
-            <button
-        className="btn"
-         style={{width : "120px",position : "absolute",zIndex : "12",right : "842px"}}
-         onPointerDown={(e) => e.stopPropagation()}
-
-          onClick={()=>setconditon(column.id)}
-        >
-           Add Condition
-        </button>
+          <a
+  href="#"
+  style={{
+    width: "120px",
+    position: "absolute",
+    zIndex: 12,
+    right: "842px",
+    color: "blue",
+    textDecoration: "underline",
+    cursor: "pointer"
+  }}
+  onPointerDown={(e) => e.stopPropagation()}
+  onClick={() => setconditon(column.id)}
+>
+  {column.condition ? column.condition : "Add Condition"}
+</a>
 
           <button
         className="btn"
