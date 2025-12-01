@@ -101,7 +101,7 @@ const setconditon = async(id) => {
 
 
 
- alert("hii")
+
   // Find the matching column
   const updated = Store.column.map((col) => {
     if (col.id === id) {

@@ -720,12 +720,11 @@ const deleteGroup = async (columnId) => {
   const { active, over } = event;
   if (!over || active.id === over.id) return;
 
-
+console.log(active.id)
    const activeId = String(active.id);
   const overId = String(over.id);
 
  
-
   // 🧠 Check what is being dragged
   const isColumnDrag = activeId.startsWith("column-");
   const isTaskDrag = activeId.startsWith("task-");
@@ -733,7 +732,8 @@ const deleteGroup = async (columnId) => {
   if (isColumnDrag) {
     const oldIndex = Store.column.findIndex((c) => c.id === active.id);
 const newIndex = Store.column.findIndex((c) => c.id === over.id);
-
+alert(oldIndex)
+alert(newIndex)
 Store.column = arrayMove(Store.column, oldIndex, newIndex);
 
 
