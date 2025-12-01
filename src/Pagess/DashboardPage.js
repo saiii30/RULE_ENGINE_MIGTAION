@@ -1,8 +1,13 @@
 // src/Pagess/DashboardPage.js
 import { useNavigate } from "react-router-dom";
 import Store from "../Store";
+import { use } from "react";
+import { useState } from "react";
+import PackagesPanel from "../Component/PackagesPanel";
+import { observer } from "mobx-react-lite";
+const DashboardPage = observer(() => {
 
-const DashboardPage = () => {
+  
   const navigate = useNavigate();
 
   // 🧹 Create New Rule → must clear all old rules
@@ -31,11 +36,14 @@ const DashboardPage = () => {
   // 📜 Previous Rules → only load saved rules
   const handlePreviousRules = () => {
     sessionStorage.setItem("mode", "previous");
-    navigate("/previous-rules");
+    Store.visibile = true
+
+  
+    
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 relative">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-96 text-center">
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <div className="flex flex-col gap-4">
@@ -53,8 +61,17 @@ const DashboardPage = () => {
           </button>
         </div>
       </div>
+
+      {
+        Store.visibile && (
+         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <PackagesPanel />
+    </div>
+
+        )
+      }
     </div>
   );
-};
+});
 
 export default DashboardPage;

@@ -2,6 +2,7 @@ import { observable, action, runInAction, toJS } from "mobx";
 import Swal from "sweetalert2";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+
 import { reaction } from "mobx";
 
 import { saveAs } from "file-saver"; // make sure you have this at the top
@@ -25,6 +26,8 @@ const Store = observable({
   selectedArray : [],
   selectedCondition: "",
   selectedValue: "",
+  visibile : false,
+  visible5 : false,
 
   async login() {
     try {
@@ -434,6 +437,14 @@ deleteNode(id) {
 
 pop : "",
 
+treedata : [],
+isSidebarVisible1 : false,
+
+setTreedata(data)
+{
+  this.treedata = data
+},
+
 ////////////////rule group popup///////
 ruleGroupPicker: {
   open: false,
@@ -782,14 +793,19 @@ if (groupName) {
 
 // ---- B.3 Build a stable snapshot of everything you need ----
 buildSnapshot() {
-  const nodes = toJS(this.nodes);
-  const edges = toJS(this.edges);
-  const engines = toJS(this.engines);
+ 
   const ruleIdsPerGroup = toJS(this.ruleIdsPerGroup);
-  const explorer = toJS(this.explorer);
+  
+  const tree = toJS(this.treedata);
+  const column = toJS(this.column);
+
+  // const explorer = toJS(this.explorer || []);
+  // const nodes = toJS(this.nodes || []);
+  // const edges = toJS(this.edges || []);
+  // const engines = toJS(this.engines || []);
 
   // optional: derive a readable rule list for quick checks
-  const rules = this.computeRulesFromGraph(nodes, engines);
+  
 
   return {
     version: 1,
@@ -798,39 +814,39 @@ buildSnapshot() {
     dashboard: this.dashboard || null,
     databasename: this.databasename || null,
 
-    // UI + context
-    explorer,
+    tree,
+    column,
+    
     selectedCollections: toJS(this.selectedCollections || []),
     activeCollection: this.activeCollection || null,
 
-    // graph + layout
-    nodes,
-    edges,
-    engines,
+    
     ruleIdsPerGroup,
     ruleCounter: this.ruleCounter || 1,
     /////added below line for new ruleid req///
      globalRuleCounter: this.globalRuleCounter || 1,
      //////////////////////
 
-    // readable rules
-    rules,
+  
   };
 },
 
 // ---- C.4 Apply a snapshot back into the store ----
 applySnapshot(snap) {
+
+  
+
+  Store.clear();
   runInAction(() => {
-    this.nodes = snap.nodes || [];
-    this.edges = snap.edges || [];
-    this.engines = snap.engines || [];
+   
     this.ruleIdsPerGroup = snap.ruleIdsPerGroup || {};
     this.ruleCounter = snap.ruleCounter || 1;
     //added below line for new ruleid req
     this.globalRuleCounter = snap.globalRuleCounter || this.globalRuleCounter || 1;
     //////////////////
-
-    this.explorer = snap.explorer || [];
+   this.treedata = snap.tree || []; 
+    this.column = snap.column || [];
+    
     this.selectedCollections = snap.selectedCollections || [];
     this.activeCollection = snap.activeCollection || null;
 
@@ -839,6 +855,7 @@ applySnapshot(snap) {
   });
 },
 
+column : [],
 // ---- F.7 Autosave (debounced) any time nodes/edges/engines change ----
 _setupAutosaveOnce: false,
 setupAutosave() {
@@ -848,11 +865,10 @@ setupAutosave() {
   // mobx reaction with debounce
   reaction(
     () => ({
-      nodes: toJS(this.nodes),
-      edges: toJS(this.edges),
-      engines: toJS(this.engines),
+      
       ruleIdsPerGroup: toJS(this.ruleIdsPerGroup),
-      explorer: toJS(this.explorer),
+      column : toJS(this.column),
+      tree : toJS(this.treedata),
       selectedCollections: toJS(this.selectedCollections || []),
       activeCollection: this.activeCollection,
       dashboard: this.dashboard,
@@ -1091,7 +1107,7 @@ _mergeSnapshots(base = {}, override = {}) {
   merged.engines = this._mergeById(base.engines || [], override.engines || []);
   merged.rules = this._mergeById(base.rules || [], override.rules || []);
   merged.explorer = this._mergeExplorers(base.explorer || [], override.explorer || []);
-
+  merged.treedata = this._mergeById(base.treedata || [], override.treedata || []);
   merged.selectedCollections = Array.from(new Set([...(base.selectedCollections || []), ...(override.selectedCollections || [])]));
   merged.ruleIdsPerGroup = { ...(base.ruleIdsPerGroup || {}), ...(override.ruleIdsPerGroup || {}) };
   merged.ruleCounter = Math.max(base.ruleCounter || 0, override.ruleCounter || 0);

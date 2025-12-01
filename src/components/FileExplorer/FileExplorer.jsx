@@ -1,17 +1,17 @@
-import React from "react";
-import { useState } from "react";
-import { observer } from "mobx-react-lite";
-import { FaPlus } from "react-icons/fa";
+
+
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { MdEdit, MdDelete } from "react-icons/md";
-import Store from "../Store";
+import { FaPlus } from "react-icons/fa6";
+import Store from "../../Store";
+import { useEffect } from "react";
+import { observer } from "mobx-react";
+export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode,setHoverId,hoverId}) => {
 
-
-const ExplorerNode = observer(({  store ,treeData,setTreeData,setPopupOpen,popupOpen,setSelectedNode,selectedNode,hoverId,setHoverId}) => {
-
-
-  const studentList = ["Sample1", "Sample2", "Sample3", "Sample4"];
+  useEffect(() => {
+    console.log("treedata updated:", Store.treedata);
+  }, [Store.treedata]);  
 
 
       const handleNodeClick = (node1,level) => {
@@ -22,7 +22,7 @@ const ExplorerNode = observer(({  store ,treeData,setTreeData,setPopupOpen,popup
           Store.isSidebarVisible1 = false
         }
         else{
-Store.isSidebarVisible1 = true
+         Store.isSidebarVisible1 = true
         }
 
         
@@ -31,13 +31,15 @@ Store.isSidebarVisible1 = true
         if(level >= 2)
         {
            
-          store.openRuleGroupPicker(node1.id, node1.name);
+         
         }
         
         setSelectedNode(node1);
         setPopupOpen(true);
       };
     
+    
+      
     
       // Toggle expand/collapse
       const toggleNode = (id) => {
@@ -47,9 +49,9 @@ Store.isSidebarVisible1 = true
             return { ...n, children: update(n.children) };
           });
     
-        setTreeData(update(treeData));
+       Store.setTreedata(update(Store.treedata));
       };
-   
+    
       // Popup: add child
       const handlePopupSelect = (label) => {
     
@@ -57,7 +59,6 @@ Store.isSidebarVisible1 = true
     
         // Stop adding children to level 2
         if (selectedNode.level === 2) {
-         
           setPopupOpen(false);
           return;
         }
@@ -78,20 +79,20 @@ Store.isSidebarVisible1 = true
             return { ...n, children: addChild(n.children) };
           });
     
-        setTreeData(addChild(treeData));
+       Store.setTreedata(addChild(Store.treedata));
         setPopupOpen(false);
       };
     
       const renderTree = (nodes, level = 0) =>
         nodes.map((node, index) => (
           <div key={node.id} style={{ marginLeft: level * 10, position: "relative",cursor : "pointer" }}>
-    
+           
             {/* Vertical Line */}
             {level > 0 && (
               <div
                 style={{
                   position: "absolute",
-                  left: -6,
+                  left: -10,
                   top: 0,
                   bottom: 0,
                   width: "1px",
@@ -141,9 +142,6 @@ Store.isSidebarVisible1 = true
                     background: "orange",
                     cursor: "pointer",
                     color : "black",
-                    display : "flex",
-                    alignItems : "center",
-                    justifyContent : "center" 
                     
                   }}
                 >
@@ -159,9 +157,7 @@ Store.isSidebarVisible1 = true
                     background: "yellow",
                     cursor: "pointer",
                     color : "black",
-                    display : "flex",
-                    alignItems : "center",
-                    justifyContent : "center"
+                   justifyContent : "center"
                   }}
                 >
                   <MdEdit />
@@ -176,9 +172,6 @@ Store.isSidebarVisible1 = true
                     background: "green",
                     color : "black",
                     cursor: "pointer",
-                     display : "flex",
-                    alignItems : "center",
-                    justifyContent : "center"
                   }}
                 >
                   <FaPlus />
@@ -192,35 +185,30 @@ Store.isSidebarVisible1 = true
         ));
     
 
+    return (
+        <div style={{width : "15%",padding: "8px",position : "relative",background :"#1f2937",height : "100%",color : "white",overflowY : "auto"}}>
 
-  return (
-    <div style={{width : "100%"}}>
+      {/* <button onClick={handleAddParent}>Add Parent</button> */}
+      <div style={{ marginTop: 20 }}>{renderTree(Store.treedata)}</div>
+
 
       
-      <div style={{ marginTop: 20 }}>{renderTree(treeData)}</div>
 
-      
+      {/* Popup */}
       {/* {popupOpen && selectedNode.level <= 1 && (
         <div
           style={{
             position: "absolute",
-            left : "100%",
-           
-            transform: "translate(-50%, -50%)",
+            top: "40%",
+            left: "40%",
             background: "white",
             padding: 20,
-            width : "300px",
-            height : "300px",
             border: "1px solid #ccc",
             borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            backgroundColor : "red",
-            zIndex: 1000,
-            overflowY: "auto",
           }}
         >
 
-          <div style={{ display: "flex", justifyContent: "flex-end"}}>
+          <div style={{ display: "flex", justifyContent: "flex-end"  }}>
       <button
         onClick={() => setPopupOpen(false)}
         style={{
@@ -230,14 +218,13 @@ Store.isSidebarVisible1 = true
           padding: "5px 10px",
           borderRadius: "5px",
           cursor: "pointer",
-          position : "fixed"
         }}
       >
         X
       </button>
     </div>
 
-          {Store.columns.map((s) => (
+          {studentList.map((s) => (
             <button
               key={s}
               onClick={() => handlePopupSelect(s)}
@@ -252,8 +239,56 @@ Store.isSidebarVisible1 = true
           ))}
         </div>
       )} */}
-  </div>
-  );
-});
 
-export default ExplorerNode;
+
+{/* 
+      {popupOpen && selectedNode.level > 1 && (
+        <div
+          style={{
+            position: "absolute",
+            top: "40%",
+            left: "40%",
+            background: "white",
+            padding: 20,
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+          }}
+        >
+
+          <div style={{ display: "flex", justifyContent: "flex-end"  }}>
+      <button
+        onClick={() => setPopupOpen(false)}
+        style={{
+          background: "red",
+          color: "white",
+          border: "none",
+          padding: "5px 10px",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+      >
+        X
+      </button>
+    </div>
+        
+
+          {ruleOrGroup.map((s) => (
+            <button
+              key={s}
+              onClick={() => ruleOrGroupSelect(s)}
+              style={{
+                display: "block",
+                margin: "8px 0",
+                width: "100%",
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )} */}
+    
+
+  </div>
+    )
+})

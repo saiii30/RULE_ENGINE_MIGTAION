@@ -1,68 +1,83 @@
 // src/FlowMain/Flow.jsx
-import React, { useEffect } from "react";
+
 import { observer } from "mobx-react";
-import { FaPlus, FaMinus, FaExpandArrowsAlt } from "react-icons/fa";
-import { toJS } from "mobx";
-import { useState } from "react";
-import Store from "../Store";
+
+
+
 import Navbar from "../Component/Navbar";
-import FileExplorer from "../Component/FileExplorer";
-import FlowCanvas from "./FlowCanvas";
+import Store from "../Store";
+import { useEffect } from "react";
+
+import React, { useState } from "react";
+import Swal from "sweetalert2";
+
+import {FileExplorer} from "../components/FileExplorer/FileExplorer";
+import {Rules} from "../components/Rules/Rules";
+
 
 
 const FlowDiagram = observer(() => {
+    
 
-  useEffect(() => {
+
+
+
+  const [globalId, setGlobalId] = useState(1); 
+  const [hoverId, setHoverId] = useState(null);
+   const [selectedNode, setSelectedNode] = useState(null);
+  const [popupOpen, setPopupOpen] = useState(false);
+
+
+
+   useEffect(() => {
           fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
       }, []);
 
+  //     useEffect(() => {
+  //   // make sure autosave is running
+  //   Store.setupAutosave(Store.column);
+  //   // try to restore the current dashboard/user save
+  //   Store.restoreFlow();
+  // }, []);
 
+  const handleSubmit = (value) => {
+        if (value === "rule") {
+       Store.column = [
+  ...Store.column,
+  {
+    id: `column-${globalId}`,
+    type: "rule",
+    name: `Rule ${globalId}`,
+    tasks: [
+      {
+        id: `task-${globalId}`,
+        ConditionSetId: `ConditionSetId${globalId}`,
+        RuleId: `RuleId${globalId}`,
+        ConditionId: "Edit ConditionId",
+        SelectAttribute: "Edit SelectAttribute",
+        Condition: "Edit Condition",
+        SelectValue: "Edit Value",
+        Flag: "Edit Flag",
+        Actions: "Edit Actions",
+        ruleorgroup: "rule",
+      },
+    ],
+  },
+];
 
-   const [hoverId, setHoverId] = useState(null);
-   const [selectedNode, setSelectedNode] = useState(null);
-  const [popupOpen, setPopupOpen] = useState(false);
-   const [treeData, setTreeData] = useState([]);
- 
+          setGlobalId((id) => id + 1);
+         } 
 
-  // fetch collections and show popup
-  const Tableselect = async () => {
-    console.log("Fetching collections...");
-    Store.closeColumnPicker();
-    await Store.fetchCollections();
-    Store.isSidebarVisible1 = true;
-    Store.pop = "Parent";
-
-
-     
-  };
-
-  const selectvalue = (name) => {
-    Store.tableName = name;
-    Store.addCollection(name);
-    Store.isSidebarVisible1 = false;
-
-    const newParent = {
-          id: Date.now().toString(),
-          name:  Store.tableName,
-          children: [],
-          isOpen: true,
-          level : 0,
-        };
-        setTreeData([...treeData, newParent]);
-    console.log("Selected:", name, "->", toJS(Store.selectedCollections));
-  };
-
-  const handleclose = () => {
-    Store.isSidebarVisible1 = false;
-  };
+         setPopupOpen(false);
+      };
 
   const handlePopupSelect = (label) => {
     
-    
-        
+        if (!selectedNode) return;
     
         // Stop adding children to level 2
         if (selectedNode.level === 2) {
+          setPopupOpen(false);
           return;
         }
         
@@ -82,93 +97,146 @@ const FlowDiagram = observer(() => {
             return { ...n, children: addChild(n.children) };
           });
     
-        setTreeData(addChild(treeData));
-        Store.isSidebarVisible1 = false;
+       Store.setTreedata(addChild(Store.treedata));
+      Store.isSidebarVisible1 = false;
+      
+        setPopupOpen(false);
       };
+
+      const selectvalue = (name) => {
+  
+    Store.addCollection(name);
+    const newParent = {
+          id: Date.now().toString(),
+          name: name,
+          children: [],
+          isOpen: true,
+          level : 0,
+        };
+        Store.setTreedata([...Store.treedata, newParent]);
+Store.isSidebarVisible1 = false;
+
+  };
+
+  const handleclose = () => {
+    Store.isSidebarVisible1 = false;
+  };
+
+  
     
+
+  const handleAddGroup = async () => {
+      // 🧠 Ask user for the group name
+      const { value: groupName } = await Swal.fire({
+        title: `<div style="color:#1e293b; font-weight:700; font-size:1.3rem;">Create New Group</div>`,
+        input: "text",
+        inputLabel: "Enter Group Name",
+        inputPlaceholder: "e.g. Price Rules or Discount Logic",
+        showCancelButton: true,
+        confirmButtonText: "Create",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#2563eb",
+        cancelButtonColor: "#64748b",
+        inputValidator: (value) => {
+          if (!value) {
+            return "Please enter a group name!";
+          }
+          if (value.trim().length < 3) {
+            return "Group name should have at least 3 characters!";
+          }
+        },
+      });
+    
+      if (groupName) {
+        // 🧩 Create a new column with that group name
+        const newColumn = {
+  id: `column-${globalId}`,
+  type: "group",
+  name: groupName.trim(),
+  collopsed: false,
+  tasks: [
+    {
+      id: `task-${globalId}`,
+      ConditionSetId: `ConditionSetId${globalId}`,
+      RuleId: `RuleId${globalId}`,
+      ConditionId: "Edit ConditionId",
+      SelectAttribute: "Edit SelectAttribute",
+      Condition: "Edit Condition",
+      SelectValue: "Edit Value",
+      Flag: "Edit Flag",
+      Actions: "Edit Actions",
+    },
+  ],
+};
+
+// MobX update
+Store.column= [...Store.column, newColumn];
+
+        setGlobalId((id) => id + 1);
+        // ✅ Success popup
+        Swal.fire({
+          title: "Group Created!",
+          text: `Group "${groupName}" has been added successfully.`,
+          icon: "success",
+          confirmButtonColor: "#2563eb",
+        });
+      }
+
+
+      setPopupOpen(false);
+    };
+    
+
+    const onClose = () => {
+      setPopupOpen(false);
+    }
+  
+
 
   return (
     <div className="w-full h-screen " style={{position : "relative"}}>
       {/* Navbar */}
       <Navbar />
 
-      {/* layout: left sidebar (18%) + main (rest) */}
-      <div style={{display : "flex",width : "100%",position : "relative"}}  >
-        {/* Sidebar: narrowed to ~18% */}
-        <div style={{ width: "15%", borderRight: "5px solid #ddd",padding: "2px" }}>
+      <div style={{width: "100%",display : "flex",height : "100%"}}>
 
-           
-          <FileExplorer treeData={treeData} setTreeData={setTreeData} setPopupOpen={setPopupOpen} popupOpen={popupOpen} setSelectedNode={setSelectedNode} selectedNode={selectedNode} hoverId={hoverId} setHoverId={setHoverId}/>
+        {
+          popupOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-72 text-center min-h-[200px]">
+        <h3 className="text-lg font-bold mb-4">Choose Option</h3>
+        
+        <div className="flex flex-col gap-3">
+          {/* Rule Button */}
+          <button
+            className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            onClick={() => handleSubmit("rule")}
+          >
+            Rule
+          </button>
+
+          {/* Group Button */}
+          <button
+            className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            onClick={() => handleAddGroup()}
+          >
+            Group
+          </button>
         </div>
 
-        {/* Main area */}
-
-        <div style={{width : "85%",position : "relative"}}>
-
-        
-
-        <div
-        style={{
-         
-          display: "flex",
-          gap: 12,
-          width: "fit-content",
-          padding:"10px",
-          marginTop:"auto",
-          marginBottom:"auto",
-          alignItems: "center",
-          padding:"19px",
-          borderRadius: 8,
-        }}
-      >
         <button
-          className="p-3 rounded-full"
-          title="Add / Select collection"
-          style={{ background: "#10b981", color: "white", border: "none" }}
-          onClick={Tableselect}
+          className="mt-4 text-red-500 underline"
+          onClick={onClose}
         >
-          <FaPlus />
-        </button>
-
-        <button
-          className="px-3 py-2 rounded-md"
-          style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={Store.saveFile}
-        >
-          Save
-        </button>
-
-        <button
-          className="px-3 py-2 rounded-md"
-          style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={Store.saveFileAs}
-        >
-          Save As
-        </button>
-
-        <button
-          className="px-3 py-2 rounded-md"
-          style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={Store.downloadLastExport}
-        >
-          Download
+          Cancel
         </button>
       </div>
-
-        <div style={{ width: "100%",position : "relative"}}>
-          <FlowCanvas />
-        </div>
-
-        </div>
+    </div>
+          )
+        }
         
-      </div>
-
-      {/* Top-right buttons: keep them above the table */}
-      
-
-      
-      {/* popup modal for selecting collections */}
-      {Store.isSidebarVisible1 && (
+        
+        {Store.isSidebarVisible1 && (
         <div
           style={{
             position: "absolute",
@@ -239,6 +307,12 @@ const FlowDiagram = observer(() => {
           
         </div>
       )}
+        <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId}  globalId={globalId}  setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
+      <Rules  globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} />
+      
+    </div>
+
+     
     </div>
   );
 });

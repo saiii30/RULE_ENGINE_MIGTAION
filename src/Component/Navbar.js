@@ -15,6 +15,10 @@ import { IoSettingsOutline } from "react-icons/io5";
 
 import { observer } from 'mobx-react-lite';
 
+
+const angledown = () => {
+  Store.visible5 = !Store.visible5
+}
  
  
  
@@ -62,7 +66,7 @@ const Navbar = observer(() => {
           <img src={image3} className='w-8 lg:w-12 rounded-full' alt="Avatar" />
           <div className='w-12 flex items-center justify-evenly hidden lg:block lg:flex lg:w-24'>
             <h4 className='text-gray-500'>{Store.username}</h4>
-            <span className='text-xl text-gray-500 lg:text-2xl cursor-pointer' onClick={Store.setvisible2}><FaAngleDown /></span>
+            <span className='text-xl text-gray-500 lg:text-2xl cursor-pointer' onClick={angledown}><FaAngleDown /></span>
           </div>
           <IoSettingsOutline className=' text-xl lg:text-3xl text-gray-500 cursor-pointer' onClick={Store.setvisible1} />
  

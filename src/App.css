@@ -5,6 +5,7 @@
    font-family: 'Poppins', sans-serif;
 }
 
+
 .grid-container{
   display: grid;
   grid-template-columns: 260px 1fr 1fr 1fr;
