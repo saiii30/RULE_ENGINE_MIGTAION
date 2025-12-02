@@ -116,9 +116,12 @@ const Home = observer(() => {
     sessionStorage.clear();
     localStorage.removeItem("authToken");
   sessionStorage.removeItem("authToken");
+  localStorage.removeItem("userData");
   localStorage.clear();
     Store.username = 'Login'
     window.location.reload()
+
+    Store.isLoggedIn = false
 
   }
 

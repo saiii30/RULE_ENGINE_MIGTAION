@@ -28,6 +28,7 @@ const Store = observable({
   selectedValue: "",
   visibile : false,
   visible5 : false,
+  isLoggedIn : false,
 
   async login() {
     try {
@@ -799,12 +800,7 @@ buildSnapshot() {
   const tree = toJS(this.treedata);
   const column = toJS(this.column);
 
-  // const explorer = toJS(this.explorer || []);
-  // const nodes = toJS(this.nodes || []);
-  // const edges = toJS(this.edges || []);
-  // const engines = toJS(this.engines || []);
-
-  // optional: derive a readable rule list for quick checks
+ 
   
 
   return {
@@ -830,6 +826,29 @@ buildSnapshot() {
   
   };
 },
+
+
+loadSnapshot : action((snap) => {
+  
+  if (!snap) return;
+
+
+  Store.username = snap.user || Store.username;
+  Store.dashboard = snap.dashboard || Store.dashboard;
+  Store.databasename = snap.databasename || Store.databasename;
+
+  Store.treedata = snap.tree || [];
+  Store.column = snap.column || [];
+  Store.selectedCollections = snap.selectedCollections || [];
+  Store.activeCollection = snap.activeCollection || null;
+
+  Store.ruleIdsPerGroup = snap.ruleIdsPerGroup || {};
+  Store.ruleCounter = snap.ruleCounter || 1;
+  Store.globalRuleCounter = snap.globalRuleCounter || 1;
+
+  console.log("Snapshot loaded");
+}),
+
 
 // ---- C.4 Apply a snapshot back into the store ----
 applySnapshot(snap) {
@@ -1074,12 +1093,11 @@ convertSnapshotToCSV: () => {
 
 
 // ------------------ 1Namespaced key helper ------------------
-saveKey(username = Store.username, dashboard = Store.dashboard) {
-  const user = username || "anon";
-  const dash = dashboard || "default";
+saveKey(username, dashboard) {
+  const user = username || this.username || "anon";
+  const dash = dashboard || this.dashboard || "default";
   return `flowData:${user}:${dash}`;
 },
-
 // ------------------2 Merge helpers ------------------
 _mergeById(a = [], b = []) {
   const map = new Map();

@@ -11,6 +11,7 @@ import Store from "../../Store";
 import { IoMdAdd } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
+import { MdEdit } from "react-icons/md";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
 export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse,editvalue }) => {
@@ -175,7 +176,7 @@ const updateCondition = (id, cond) => {
       <div>
         {column.type === "group" && (
 
-        <div style={{display : "flex" , width : "400px",justifyContent : "space-evenly",position : "relative"}}>
+        <div style={{display : "flex" , width : "200px",justifyContent : "space-evenly",position : "relative"}}>
 
 
           <a
@@ -184,7 +185,7 @@ const updateCondition = (id, cond) => {
     width: "120px",
     position: "absolute",
     zIndex: 12,
-    right: "842px",
+    right: "802px",
     color: "blue",
     textDecoration: "underline",
     cursor: "pointer"
@@ -196,51 +197,41 @@ const updateCondition = (id, cond) => {
 </a>
 
           <button
-        className="btn"
-         style={{width : "40px"}}
-         onPointerDown={(e) => e.stopPropagation()}
+  className="icon-btn"
+  onPointerDown={(e) => e.stopPropagation()}
+  onClick={() => addRuleInsideGroup(column.id)}
+>
+  <IoMdAdd size={20} />
+</button>
 
-          onClick={() => addRuleInsideGroup(column.id)}
-        >
-           <IoMdAdd/>
-        </button>
+<button
+  className="icon-btn"
+  onPointerDown={(e) => e.stopPropagation()}
+  onClick={() => editGroupName(column.id)}
+>
+  <MdEdit size={16} />
+</button>
 
-        <button
-        className="btn"
-         style={{width : "150px"}}
-         onPointerDown={(e) => e.stopPropagation()}
+<button
+  className="icon-btn"
+  onPointerDown={(e) => e.stopPropagation()}
+  onClick={() => deleteGroup(column.id)}
+>
+  <MdDelete size={16} />
+</button>
 
-          onClick={() => editGroupName(column.id)}
-        >
-           Edit Group Name
-        </button>
-         <button
-        className="btn"
-         style={{width : "40px"}}
-         onPointerDown={(e) => e.stopPropagation()}
+<button
+  className="icon-btn"
+  onPointerDown={(e) => e.stopPropagation()}
+  onClick={() => toggleCollapse(column.id)}
+>
+  {column.collapsed ? (
+    <MdOutlineExpandLess size={16} />
+  ) : (
+    <MdOutlineExpandMore size={16} />
+  )}
+</button>
 
-          onClick={() => deleteGroup(column.id)}
-        >
-          <MdDelete/>
-        </button>
-        <button
-        onPointerDown={(e) => e.stopPropagation()}
-
-          onClick={() => toggleCollapse(column.id)}
-          style={{
-            width : "40px",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            padding: "5px 12px",
-            cursor: "pointer",
-            fontSize : "12px"
-          }}
-
-          className="btn"
-        >
-          {column.collapsed ? <MdOutlineExpandLess /> : <MdOutlineExpandMore />}
-        </button>
           </div>
        
 

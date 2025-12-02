@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
-
+import Store from "../Store";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,10 +11,11 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await login({ email, password });
-
+   Store.username = email
     if (result.success) {
       sessionStorage.setItem("authToken", result.data.token);
       if (remember) localStorage.setItem("authToken", result.data.token);
+      Store.isLoggedIn = true
       navigate("/home");
     } else {
       alert("Invalid credentials");

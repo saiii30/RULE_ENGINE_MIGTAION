@@ -33,6 +33,37 @@ const FlowDiagram = observer(() => {
           fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
       }, []);
 
+      useEffect(() => {
+  const handleClose = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+  };
+
+  window.addEventListener("beforeunload", handleClose);
+
+  return () => {
+    window.removeEventListener("beforeunload", handleClose);
+  };
+}, []);
+
+
+
+useEffect(() => {
+  try {
+    // Get all keys that start with flowData:
+    const keys = Object.keys(localStorage).filter(k => k.startsWith("flowData:"));
+    if (keys.length === 0) return;
+
+    const latestKey = keys[keys.length - 1]; // pick last saved snapshot
+    const snap = localStorage.getItem(latestKey);
+    if (snap) Store.loadSnapshot(JSON.parse(snap));
+  } catch (e) {
+    console.error("Failed to load snapshot from localStorage", e);
+  }
+}, []);
+
+
+
   //     useEffect(() => {
   //   // make sure autosave is running
   //   Store.setupAutosave(Store.column);
