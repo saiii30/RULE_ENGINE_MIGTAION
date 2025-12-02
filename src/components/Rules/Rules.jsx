@@ -696,14 +696,14 @@ const deleteGroup = async (columnId) => {
     const newRule = {
       id: `task-${globalId}`,
       ConditionSetId: `ConditionSetId${globalId}`,
-      RuleId: `RuleId${globalId}`,
+       RuleId: col.groupRuleId,
       ConditionId: "Edit ConditionId",
       SelectAttribute: "Edit SelectAttribute",
       Condition: "Edit Condition",
       SelectValue: "Edit Value",
       Flag: "Edit Flag",
       Actions: "Edit Actions",
-      ruleorgroup: "rule",
+      // ruleorgroup: "rule",
     };
 
     setGlobalId((id) => id + 1);

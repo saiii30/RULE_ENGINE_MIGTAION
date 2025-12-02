@@ -9,6 +9,8 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
+
+    localStorage.clear()
     e.preventDefault();
     const result = await login({ email, password });
    Store.username = email

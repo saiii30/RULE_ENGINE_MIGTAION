@@ -66,62 +66,91 @@ const { attributes, listeners, setNodeRef, transform, transition } =
 };
 
 
-const setconditon = async(id) => {
+const setconditon = async (id) => {
+  // Prepare HTML dynamically with all columns and their stored count
+  const html = Store.column
+    .map(
+      (col) => `
+      <div style="display:flex; justify-content:space-between; padding:5px 10px; cursor:pointer; border-bottom:1px solid #eee;" data-rule-id="${col.tasks?.[0]?.RuleId}">
+        
+        <span>Rule: ${col.count || 0}</span>
+      </div>
+    `
+    )
+    .join("");
 
   Swal.fire({
-  title: "Choose Condition",
-  html: `
-    <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
-      <button id="andBtn" class="swal2-confirm swal2-styled" style="padding:10px 20px;">
-        AND
-      </button>
-      <button id="orBtn" class="swal2-cancel swal2-styled" style="padding:10px 20px;">
-        OR
-      </button>
-    </div>
-  `,
-  showConfirmButton: false,
-  showCancelButton: false,
-  didOpen: () => {
-    document.getElementById("andBtn").onclick = () => {
-      Swal.close();
-      console.log("AND selected");
-       updateCondition(id, "AND");   // <--- Update here
+    title: "Select Column",
+    html: `<div style="max-height:300px; overflow-y:auto;">${html}</div>`,
+    showConfirmButton: false,
+    showCancelButton: true,
+    cancelButtonText: "Close",
+    didOpen: () => {
+      // Add click for each column div
+      const divs = Swal.getHtmlContainer().querySelectorAll("div[data-rule-id]");
+      divs.forEach((div) => {
+        div.onclick = () => {
+          const selectedRuleId = div.getAttribute("data-rule-id");
+          Swal.close();
+
+          console.log("Selected RuleId:", selectedRuleId);
+          alert(selectedRuleId);
+
+          // Update only the 'condition' property with RuleId
+          const colIndex = Store.column.findIndex(c => c.id === id);
+          if (colIndex !== -1) {
+            Store.column[colIndex] = {
+              ...Store.column[colIndex],
+              condition: selectedRuleId
+            };
+          }
+        };
+      });
+    },
+  });
+};
+
+
+
+
+// const setconditon = async(id) => {
+
+//   Swal.fire({
+//   title: "Choose Condition",
+//   html: `
+//     <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
+//       <button id="andBtn" class="swal2-confirm swal2-styled" style="padding:10px 20px;">
+//         AND
+//       </button>
+//       <button id="orBtn" class="swal2-cancel swal2-styled" style="padding:10px 20px;">
+//         OR
+//       </button>
+//     </div>
+//   `,
+//   showConfirmButton: false,
+//   showCancelButton: false,
+//   didOpen: () => {
+//     document.getElementById("andBtn").onclick = () => {
+//       Swal.close();
+//       console.log("AND selected");
+//        updateCondition(id, "AND");   // <--- Update here
       
-    };
+//     };
 
-    document.getElementById("orBtn").onclick = () => {
-      Swal.close();
-      console.log("OR selected");
-       updateCondition(id, "OR");    // <--- Update here
+//     document.getElementById("orBtn").onclick = () => {
+//       Swal.close();
+//       console.log("OR selected");
+//        updateCondition(id, "OR");    // <--- Update here
       
-      // your logic here
-    };
-  }
-});
+//       // your logic here
+//     };
+//   }
+// });
 
 
 
-
-  // // Find the matching column
-  // const updated = Store.column.map((col) => {
-  //   if (col.id === id) {
-  //     return {
-  //       ...col,
-  //       condition: value  // <-- set AND / OR here
-  //     };
-  //     ;
-  //   }
-    
-  //   return col;
-  // });
-
-  // Store.column = updated;
-
-  // console.log(updated)
- 
   
-}
+// }
 
 
 const updateCondition = (id, cond) => {
@@ -176,7 +205,7 @@ const updateCondition = (id, cond) => {
       <div>
         {column.type === "group" && (
 
-        <div style={{display : "flex" , width : "200px",justifyContent : "space-evenly",position : "relative"}}>
+        <div style={{display : "flex" , width : "150px",justifyContent : "space-evenly",position : "relative"}}>
 
 
           <a
@@ -197,7 +226,7 @@ const updateCondition = (id, cond) => {
 </a>
 
           <button
-  className="icon-btn"
+  className="icon-btn add-icon"
   onPointerDown={(e) => e.stopPropagation()}
   onClick={() => addRuleInsideGroup(column.id)}
 >
@@ -205,30 +234,30 @@ const updateCondition = (id, cond) => {
 </button>
 
 <button
-  className="icon-btn"
+  className="icon-btn edit-icon"
   onPointerDown={(e) => e.stopPropagation()}
   onClick={() => editGroupName(column.id)}
 >
-  <MdEdit size={16} />
+  <MdEdit size={20} />
 </button>
 
 <button
-  className="icon-btn"
+  className="icon-btn delete-icon"
   onPointerDown={(e) => e.stopPropagation()}
   onClick={() => deleteGroup(column.id)}
 >
-  <MdDelete size={16} />
+  <MdDelete size={20} />
 </button>
 
 <button
-  className="icon-btn"
+  className="icon-btn collapse-icon"
   onPointerDown={(e) => e.stopPropagation()}
   onClick={() => toggleCollapse(column.id)}
 >
   {column.collapsed ? (
-    <MdOutlineExpandLess size={16} />
+    <MdOutlineExpandLess size={20} />
   ) : (
-    <MdOutlineExpandMore size={16} />
+    <MdOutlineExpandMore size={20} />
   )}
 </button>
 

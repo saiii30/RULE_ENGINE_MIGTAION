@@ -1071,18 +1071,39 @@ convertSnapshotToCSV: () => {
     const parent = root?.name || "";
     const child = root?.children?.[0]?.name || "";
     const subChild = root?.children?.[0]?.children?.[0]?.name || "";
-
+    let value = null
     // loop every column
     Store.column.forEach(col => {
 
-      // loop every task of that column
-      col.tasks.forEach(task => {
-        
-        const taskValues = Object.values(task).join(",");
-        csvLines.push(`${parent},${child},${subChild},${taskValues}`);
-      });
+  const groupCount = col.count;  // 👈 count per column
 
-    });
+  col.tasks.forEach(task => {
+
+    // convert task to array
+    let t = { ...task };
+
+    // Insert count BEFORE RuleId
+    const orderedTask = {
+      ConditionSetId: t.ConditionSetId,
+      Count: groupCount,          // 👈 INSERTED HERE
+      RuleId: t.RuleId,
+      ConditionId: t.ConditionId,
+      SelectAttribute: t.SelectAttribute,
+      Condition: t.Condition,
+      SelectValue: t.SelectValue,
+      Flag: t.Flag,
+      Actions: t.Actions
+    };
+
+    // convert to CSV row
+    const taskValues = Object.values(orderedTask).join(",");
+
+    csvLines.push(`${parent},${child},${subChild},${taskValues}`);
+
+  });
+
+});
+
 
   });
 

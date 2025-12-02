@@ -21,6 +21,7 @@ const FlowDiagram = observer(() => {
 
 
 
+  const [ruleCounter, setRuleCounter] = useState(1);
 
   const [globalId, setGlobalId] = useState(1); 
   const [hoverId, setHoverId] = useState(null);
@@ -33,18 +34,18 @@ const FlowDiagram = observer(() => {
           fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
       }, []);
 
-      useEffect(() => {
-  const handleClose = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userData");
-  };
+//       useEffect(() => {
+//   const handleClose = () => {
+//     localStorage.removeItem("authToken");
+//     localStorage.removeItem("userData");
+//   };
 
-  window.addEventListener("beforeunload", handleClose);
+//   window.addEventListener("beforeunload", handleClose);
 
-  return () => {
-    window.removeEventListener("beforeunload", handleClose);
-  };
-}, []);
+//   return () => {
+//     window.removeEventListener("beforeunload", handleClose);
+//   };
+// }, []);
 
 
 
@@ -73,30 +74,37 @@ useEffect(() => {
 
   const handleSubmit = (value) => {
         if (value === "rule") {
+          
+          const newCount = Store.column.length+1
+          alert(newCount)
        Store.column = [
   ...Store.column,
   {
     id: `column-${globalId}`,
     type: "rule",
     name: `Rule ${globalId}`,
+    count : newCount,
     tasks: [
       {
         id: `task-${globalId}`,
         ConditionSetId: `ConditionSetId${globalId}`,
-        RuleId: `RuleId${globalId}`,
+        RuleId: `RuleId${ruleCounter}`,
+
         ConditionId: "Edit ConditionId",
         SelectAttribute: "Edit SelectAttribute",
         Condition: "Edit Condition",
         SelectValue: "Edit Value",
         Flag: "Edit Flag",
         Actions: "Edit Actions",
-        ruleorgroup: "rule",
+        // ruleorgroup: "rule",
       },
     ],
   },
 ];
 
           setGlobalId((id) => id + 1);
+          setRuleCounter((n) => n + 1);
+
          } 
 
          setPopupOpen(false);
@@ -180,16 +188,20 @@ Store.isSidebarVisible1 = false;
     
       if (groupName) {
         // 🧩 Create a new column with that group name
+        const newCount = Store.column.length+1
+        alert(newCount)
         const newColumn = {
   id: `column-${globalId}`,
   type: "group",
   name: groupName.trim(),
   collopsed: false,
+  groupRuleId: `RuleId${ruleCounter}`,
+  count : newCount,
   tasks: [
     {
       id: `task-${globalId}`,
       ConditionSetId: `ConditionSetId${globalId}`,
-      RuleId: `RuleId${globalId}`,
+      RuleId: `RuleId${ruleCounter}`,
       ConditionId: "Edit ConditionId",
       SelectAttribute: "Edit SelectAttribute",
       Condition: "Edit Condition",
@@ -204,6 +216,8 @@ Store.isSidebarVisible1 = false;
 Store.column= [...Store.column, newColumn];
 
         setGlobalId((id) => id + 1);
+        setRuleCounter((n) => n + 1);
+
         // ✅ Success popup
         Swal.fire({
           title: "Group Created!",

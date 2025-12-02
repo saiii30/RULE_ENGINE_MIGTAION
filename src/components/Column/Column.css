@@ -115,27 +115,27 @@ button {
 button:hover {
   background-color: #0056b3;
 }
-
 .icon-btn {
-  width: 32px;
-  height: 32px;
+  background: transparent;
   border: none;
-  border-radius: 50%;
-  background: #d9d9d9 !important; /* darker to see clearly */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
   cursor: pointer;
-  transition: 0.2s;
-  color: black;
   
 }
 
-
-.icon-btn:hover {
-  background: #e0e0e0;
+/* Different colors for each button */
+.add-icon svg {
+  color: #10b981;   /* green */
 }
 
-.icon-btn:active {
-  background: #d4d4d4;
+.edit-icon svg {
+  color: #3b82f6;   /* blue */
+}
+
+.delete-icon svg {
+  color: #ef4444;   /* red */
+}
+
+.collapse-icon svg {
+  color: #8b5cf6;   /* purple */
 }
