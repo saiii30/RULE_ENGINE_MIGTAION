@@ -29,6 +29,7 @@ const Store = observable({
   visibile : false,
   visible5 : false,
   isLoggedIn : false,
+  parentId : "",
 
   async login() {
     try {

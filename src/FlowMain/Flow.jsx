@@ -27,6 +27,7 @@ const FlowDiagram = observer(() => {
   const [hoverId, setHoverId] = useState(null);
    const [selectedNode, setSelectedNode] = useState(null);
   const [popupOpen, setPopupOpen] = useState(false);
+  const [treecount,settreecount] = useState(1);
 
 
 
@@ -34,18 +35,6 @@ const FlowDiagram = observer(() => {
           fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
       }, []);
 
-//       useEffect(() => {
-//   const handleClose = () => {
-//     localStorage.removeItem("authToken");
-//     localStorage.removeItem("userData");
-//   };
-
-//   window.addEventListener("beforeunload", handleClose);
-
-//   return () => {
-//     window.removeEventListener("beforeunload", handleClose);
-//   };
-// }, []);
 
 
 
@@ -65,12 +54,6 @@ useEffect(() => {
 
 
 
-  //     useEffect(() => {
-  //   // make sure autosave is running
-  //   Store.setupAutosave(Store.column);
-  //   // try to restore the current dashboard/user save
-  //   Store.restoreFlow();
-  // }, []);
 
   const handleSubmit = (value) => {
         if (value === "rule") {
@@ -84,6 +67,7 @@ useEffect(() => {
     type: "rule",
     name: `Rule ${globalId}`,
     count : newCount,
+    treeId: Store.parentId,
     tasks: [
       {
         id: `task-${globalId}`,
@@ -146,7 +130,7 @@ useEffect(() => {
   
     Store.addCollection(name);
     const newParent = {
-          id: Date.now().toString(),
+          id: `tree${treecount}`,
           name: name,
           children: [],
           isOpen: true,
@@ -154,6 +138,8 @@ useEffect(() => {
         };
         Store.setTreedata([...Store.treedata, newParent]);
 Store.isSidebarVisible1 = false;
+alert(`tree${treecount}`)
+settreecount((treecount) => treecount + 1)
 
   };
 
@@ -197,6 +183,7 @@ Store.isSidebarVisible1 = false;
   collopsed: false,
   groupRuleId: `RuleId${ruleCounter}`,
   count : newCount,
+  treeId: Store.parentId,
   tasks: [
     {
       id: `task-${globalId}`,

@@ -14,9 +14,40 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
   }, [Store.treedata]);  
 
 
+  const getTopParentId = (nodes, targetId) => {
+  for (let parent of nodes) {
+
+    if (parent.id === targetId) {
+      return parent.id; // Clicked top parent
+    }
+
+    if (parent.children) {
+      for (let child of parent.children) {
+
+        if (child.id === targetId) {
+          return parent.id; // Child → return top parent
+        }
+
+        if (child.children) {
+          for (let sub of child.children) {
+
+            if (sub.id === targetId) {
+              return parent.id; // Subchild → return top parent
+            }
+
+          }
+        }
+      }
+    }
+  }
+  return null;
+};
+
+
+
       const handleNodeClick = (node1,level) => {
 
-
+         const topParentId = getTopParentId(Store.treedata, node1.id);
         if(level === 2)
         {
           Store.isSidebarVisible1 = false
@@ -24,16 +55,12 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
         else{
          Store.isSidebarVisible1 = true
         }
-
-        
         Store.pop = node1.name
 
-        if(level >= 2)
-        {
-           
-         
-        }
-        
+        Store.treedata.forEach((data) => {
+
+        })
+        Store.parentId = topParentId
         setSelectedNode(node1);
         setPopupOpen(true);
       };
@@ -162,103 +189,6 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
       {/* <button onClick={handleAddParent}>Add Parent</button> */}
       <div style={{ marginTop: 20 }}>{renderTree(Store.treedata)}</div>
 
-
-      
-
-      {/* Popup */}
-      {/* {popupOpen && selectedNode.level <= 1 && (
-        <div
-          style={{
-            position: "absolute",
-            top: "40%",
-            left: "40%",
-            background: "white",
-            padding: 20,
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-          }}
-        >
-
-          <div style={{ display: "flex", justifyContent: "flex-end"  }}>
-      <button
-        onClick={() => setPopupOpen(false)}
-        style={{
-          background: "red",
-          color: "white",
-          border: "none",
-          padding: "5px 10px",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        X
-      </button>
-    </div>
-
-          {studentList.map((s) => (
-            <button
-              key={s}
-              onClick={() => handlePopupSelect(s)}
-              style={{
-                display: "block",
-                margin: "8px 0",
-                width: "100%",
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )} */}
-
-
-{/* 
-      {popupOpen && selectedNode.level > 1 && (
-        <div
-          style={{
-            position: "absolute",
-            top: "40%",
-            left: "40%",
-            background: "white",
-            padding: 20,
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-          }}
-        >
-
-          <div style={{ display: "flex", justifyContent: "flex-end"  }}>
-      <button
-        onClick={() => setPopupOpen(false)}
-        style={{
-          background: "red",
-          color: "white",
-          border: "none",
-          padding: "5px 10px",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        X
-      </button>
-    </div>
-        
-
-          {ruleOrGroup.map((s) => (
-            <button
-              key={s}
-              onClick={() => ruleOrGroupSelect(s)}
-              style={{
-                display: "block",
-                margin: "8px 0",
-                width: "100%",
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )} */}
-    
 
   </div>
     )
