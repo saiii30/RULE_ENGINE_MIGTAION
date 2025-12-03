@@ -27,7 +27,30 @@ const { attributes, listeners, setNodeRef, transform, transition } =
     
   };
 
-  const[value,setvalue] = useState("")
+
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+
+const toggleDropdown = (id) => {
+  setOpenDropdownId(prev => (prev === id ? null : id));
+};
+
+const handleSelectCondition = (columnId, selectedRuleId) => {
+  if (!selectedRuleId) return;
+
+  const index = Store.column.findIndex(c => c.id === columnId);
+
+  if (index !== -1) {
+    Store.column[index] = {
+      ...Store.column[index],
+      condition: selectedRuleId
+    };
+  }
+
+  setOpenDropdownId(null); // close dropdown
+};
+
+
+  
   const editGroupName = async (columnId) => {
   const { value: Name } = await Swal.fire({
     title: `<div style="color:#1e293b; font-weight:700; font-size:1.3rem;">Edit Group Name</div>`,
@@ -66,110 +89,10 @@ const { attributes, listeners, setNodeRef, transform, transition } =
 };
 
 
-const setconditon = async (id) => {
-  // Prepare HTML dynamically with all columns and their stored count
-  const html = Store.column
-    .map(
-      (col) => `
-      <div style="display:flex; justify-content:space-between; padding:5px 10px; cursor:pointer; border-bottom:1px solid #eee;" data-rule-id="${col.tasks?.[0]?.RuleId}">
-        
-        <span>Rule: ${col.count || 0}</span>
-      </div>
-    `
-    )
-    .join("");
-
-  Swal.fire({
-    title: "Select Column",
-    html: `<div style="max-height:300px; overflow-y:auto;">${html}</div>`,
-    showConfirmButton: false,
-    showCancelButton: true,
-    cancelButtonText: "Close",
-    didOpen: () => {
-      // Add click for each column div
-      const divs = Swal.getHtmlContainer().querySelectorAll("div[data-rule-id]");
-      divs.forEach((div) => {
-        div.onclick = () => {
-          const selectedRuleId = div.getAttribute("data-rule-id");
-          Swal.close();
-
-          console.log("Selected RuleId:", selectedRuleId);
-          alert(selectedRuleId);
-
-          // Update only the 'condition' property with RuleId
-          const colIndex = Store.column.findIndex(c => c.id === id);
-          if (colIndex !== -1) {
-            Store.column[colIndex] = {
-              ...Store.column[colIndex],
-              condition: selectedRuleId
-            };
-          }
-        };
-      });
-    },
-  });
-};
-
-
-
-
-// const setconditon = async(id) => {
-
-//   Swal.fire({
-//   title: "Choose Condition",
-//   html: `
-//     <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
-//       <button id="andBtn" class="swal2-confirm swal2-styled" style="padding:10px 20px;">
-//         AND
-//       </button>
-//       <button id="orBtn" class="swal2-cancel swal2-styled" style="padding:10px 20px;">
-//         OR
-//       </button>
-//     </div>
-//   `,
-//   showConfirmButton: false,
-//   showCancelButton: false,
-//   didOpen: () => {
-//     document.getElementById("andBtn").onclick = () => {
-//       Swal.close();
-//       console.log("AND selected");
-//        updateCondition(id, "AND");   // <--- Update here
-      
-//     };
-
-//     document.getElementById("orBtn").onclick = () => {
-//       Swal.close();
-//       console.log("OR selected");
-//        updateCondition(id, "OR");    // <--- Update here
-      
-//       // your logic here
-//     };
-//   }
-// });
-
-
-
-  
-// }
-
-
-const updateCondition = (id, cond) => {
-
-  Store.column = Store.column.map((col) =>
-    col.id === id ? { ...col, condition: cond } : col
-  );
-
-  console.log("Updated condition:", cond);
-
-  // If using React state:
-  // setColumns([...Store.column]);
-};
-
-
 
   return (
      <div style={style} className="column" >
-      {/* <h4>{column.name}</h4> */}
+      
   
 
      <div style={{display : "flex",width : "100%",justifyContent : "space-between",alignItems : "center",position : "relative"}}>
@@ -202,28 +125,65 @@ const updateCondition = (id, cond) => {
         </div>
         
 
-      <div>
+      <div style={{position : "relative"}}>
         {column.type === "group" && (
 
         <div style={{display : "flex" , width : "150px",justifyContent : "space-evenly",position : "relative"}}>
 
 
-          <a
-  href="#"
-  style={{
-    width: "120px",
-    position: "absolute",
-    zIndex: 12,
-    right: "802px",
-    color: "blue",
-    textDecoration: "underline",
-    cursor: "pointer"
-  }}
-  onPointerDown={(e) => e.stopPropagation()}
-  onClick={() => setconditon(column.id)}
->
-  {column.condition ? column.condition : "Add Condition"}
-</a>
+          <div style={{ width: "120px", position: "absolute", zIndex: 12, right: "820px", color: "blue", textDecoration: "underline", cursor: "pointer" }}>
+
+  {/* clickable text */}
+  <a
+    href="#"
+    style={{
+      width: "120px",
+      color: "blue",
+      textDecoration: "underline",
+      cursor: "pointer"
+    }}
+    onPointerDown={(e) => e.stopPropagation()}
+    onClick={() => toggleDropdown(column.id)}
+  >
+    {column.condition ? column.condition.replace(/\D/g, "") : "Add Condition"}
+
+  </a>
+
+  {/* dropdown */}
+  {openDropdownId === column.id && (
+    <select
+      style={{
+        position: "absolute",
+        top: "25px",
+        left: "0px",
+        width: "150px",
+        padding: "6px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        background: "white",
+        zIndex: 12,
+      }}
+      onChange={(e) => handleSelectCondition(column.id, e.target.value)}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <option value="">Select Column</option>
+
+      {Store.column.map((col) => {
+  const ruleId = col.tasks?.[0]?.RuleId;          // e.g. id1, id2, Rule3
+  const onlyNumber = ruleId?.replace(/\D/g, "");  // result: 1, 2, 3
+
+  return (
+    <option key={col.id} value={ruleId}>
+      {onlyNumber}
+    </option>
+  );
+})}
+
+    </select>
+  )}
+
+</div>
+
 
           <button
   className="icon-btn add-icon"
@@ -285,6 +245,7 @@ const updateCondition = (id, cond) => {
                   key={task.id}
                   {...task}
                   column={column.type}
+                  columnvalue={column}
                   columnId={column.id}
                   editvalue={editvalue}
                   handleDeleteRule={handleDeleteRule}

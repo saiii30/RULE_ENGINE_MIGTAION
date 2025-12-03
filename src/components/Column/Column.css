@@ -69,6 +69,7 @@
 
 /* Smooth expand/collapse */
 .collapse-container {
+  
   overflow: hidden;
   transition: max-height 0.6s ease, opacity 0.4s ease;
 }
