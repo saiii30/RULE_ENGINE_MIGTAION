@@ -239,13 +239,13 @@ export const Task = observer(({
       {/* ConditionId clickable with dropdown */}
       <div style={{ position: "relative"}}>
         <div
-          onClick={() => setOpenDropdown(prev => !prev)}
+          onClick={() => editvalue(id, "ConditionId",column,columnvalue)}
           style={{ cursor: "pointer", color: "blue", textDecoration: "underline", width: "120px" }}
         >
           {ConditionId || "Edit Condition"}
         </div>
 
-        {openDropdown && (
+        {/* {openDropdown && (
           <select
             style={{
               position: "absolute",
@@ -266,7 +266,7 @@ export const Task = observer(({
               <option key={num} value={num}>{num}</option>
             ))}
           </select>
-        )}
+        )} */}
       </div>
 
       <div onClick={() => editvalue(id,"SelectAttribute")} style={{ cursor: "pointer" }}>{SelectAttribute}</div>

@@ -49,50 +49,71 @@ const Tableselect = async() =>{
   Store.isSidebarVisible1 = true;
     Store.pop = "Parent";
     await Store.fetchCollections();
-
-  // alert("hii")
-  // const newParent = {
-  //         id: Date.now().toString(),
-  //         name: "Parent",
-  //         children: [],
-  //         isOpen: true,
-  //         level : 0,
-  //       };
-
-        
-  //       Store.setTreedata([...Store.treedata, newParent]);
-  //       alert(JSON.stringify(Store.treedata))
 }
 
 const popupSections = {
+
   ConditionId: (row) => `
     <div style="padding: 1rem 0.5rem;">
       <div style="margin-bottom: 1.5rem;">
-        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
-          Condition ID
+        <label style="display:block;font-size:0.875rem;font-weight:600;color:#475569;margin-bottom:0.5rem;text-align:left;">
+          Condition
         </label>
-        <input 
-          id="condId" 
-          type="text"
-          placeholder="Enter Condition ID" 
-          value="${row.ConditionId || ""}"
-          style="
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 0.75rem;
-            font-size: 0.9375rem;
-            color: #1e293b;
-            background: #ffffff;
-            transition: all 0.2s ease;
-            outline: none;
-          "
-          onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
-          onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"
-        />
+        <div class="dropdown-container" style="position: relative;">
+          <div 
+            class="dropdown-trigger" 
+            id="ConditionIdTrigger"
+            data-value="${row.ConditionId || ""}"
+            style="
+              display:flex;align-items:center;justify-content:space-between;width:100%;padding:0.75rem 1rem;background:linear-gradient(to bottom,#ffffff,#f8fafc);border:2px solid #e2e8f0;border-radius:0.75rem;cursor:pointer;font-size:0.9375rem;color:#1e293b;transition:all 0.2s ease;
+            "
+          >
+            <span id="ConditionIdText" style="color: ${row.ConditionId ? '#1e293b' : '#94a3b8'};">
+              ${row.ConditionId || 'Select Condition'}
+            </span>
+            <svg class="dropdown-arrow" style="width:30px;height:30px;color:#64748b;transition:transform 0.2s ease;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
+          <div class="dropdown-list" id="ConditionIdList" style="display:none;position:absolute;top:calc(100% + 0.5rem);left:0;right:0;background:#ffffff;border:2px solid #e2e8f0;border-radius:0.75rem;z-index:9999;max-height:240px;overflow-y:auto;animation:slideDown 0.2s ease;">
+            ${ (Store.conditionidvalue || [1,2,3,4]).map(v => `
+              <div class="dropdown-option" data-value="${v}" style="padding: 0.75rem 1rem; cursor: pointer; font-size: 0.9375rem; color: #334155;">
+                ${v}
+              </div>
+            `).join('') }
+          </div>
+        </div>
       </div>
     </div>
   `,
+  // ConditionId: (row) => `
+  //   <div style="padding: 1rem 0.5rem;">
+  //     <div style="margin-bottom: 1.5rem;">
+  //       <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
+  //         Condition ID
+  //       </label>
+  //       <input 
+  //         id="condId" 
+  //         type="text"
+  //         placeholder="Enter Condition ID" 
+  //         value="${row.ConditionId || ""}"
+  //         style="
+  //           width: 100%;
+  //           padding: 0.75rem 1rem;
+  //           border: 2px solid #e2e8f0;
+  //           border-radius: 0.75rem;
+  //           font-size: 0.9375rem;
+  //           color: #1e293b;
+  //           background: #ffffff;
+  //           transition: all 0.2s ease;
+  //           outline: none;
+  //         "
+  //         onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
+  //         onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"
+  //       />
+  //     </div>
+  //   </div>
+  // `,
 
   SelectAttribute: (row) => `
     <div style="padding: 1rem 0.5rem;">
@@ -309,7 +330,39 @@ const popupSections = {
   `
 };
 
-const editvalue = async (id, attribute) => {
+const getConditionDropdownNumbers = (col) => {
+    
+    if (col.type === "rule") {
+      
+      
+      return Array.from({ length: Store.column.length }, (_, i) => i + 1);
+    } else {
+      
+      const targetCol = Store.column.find((c) => c.id === col.id);
+      const taskLength = targetCol?.tasks?.length || 0;
+      return Array.from({ length: taskLength }, (_, i) => i + 1);
+    }
+  };
+
+const editvalue = async (id, attribute,type,columnvalue) => {
+
+  var value;
+  
+  if(attribute === "ConditionId")
+  {
+    if(type === "rule")
+    {
+      alert("rule")
+      value = getConditionDropdownNumbers(columnvalue);
+      Store.conditionidvalue = value;
+    }
+    else{
+      alert("group")
+      value = getConditionDropdownNumbers(columnvalue);
+      Store.conditionidvalue = value;
+    }
+
+  }
 
  
 // Find the specific task
@@ -340,8 +393,8 @@ if (attribute === "SelectAttribute") {
 
 
 
-  // If attribute unknown, fallback to ConditionId
-  if (!popupSections[attribute]) attribute = "ConditionId";
+  // // If attribute unknown, fallback to ConditionId
+  // if (!popupSections[attribute]) attribute = "ConditionId";
 
   // Build full HTML with styles (keeps your original style block)
   const html = `
@@ -507,6 +560,31 @@ if (
         });
       };
 
+      // 🔥 Rebuild ConditionId list fresh every time popup opens
+const conditionList = document.getElementById("ConditionIdList");
+
+if (conditionList) {
+  const arr = Store.conditionidvalue || [];
+
+  conditionList.innerHTML = arr.length
+    ? arr
+        .map(
+          (v) => `
+      <div class="dropdown-option" data-value="${v}"
+           style="padding:.75rem 1rem; cursor:pointer; color:#334155">
+          ${v}
+      </div>`
+        )
+        .join("")
+    : `<div style="padding:10px; color:#94a3b8">No values found</div>`;
+}
+
+
+      if (document.getElementById("ConditionIdTrigger")) {
+        // fetchOnOpen = true so it loads based on SelectAttribute
+        attachDropdown("ConditionId", () => Store.conditionidvalue, false);
+      }
+
       // Attach dropdowns only if those elements exist
       if (document.getElementById("SelectAttributeTrigger")) {
         attachDropdown("SelectAttribute", () => Store.columns || [], false);
@@ -518,6 +596,7 @@ if (
         // fetchOnOpen = true so it loads based on SelectAttribute
         attachDropdown("SelectValue", () => Store.selectedArray || [], true);
       }
+      
 
       
 
@@ -534,7 +613,10 @@ flagSwitch?.addEventListener("change", () => {
     },
     preConfirm: () => {
       return {
-        ConditionId: document.getElementById("condId")?.value || "",
+        ConditionId:   
+        document.getElementById("ConditionIdTrigger")?.getAttribute("data-value") ||
+          document.getElementById("ConditionIdText")?.textContent?.trim() ||
+          "",
         SelectAttribute:
           document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
           document.getElementById("SelectAttributeText")?.textContent?.trim() ||
@@ -543,6 +625,7 @@ flagSwitch?.addEventListener("change", () => {
           document.getElementById("ConditionTrigger")?.getAttribute("data-value") ||
           document.getElementById("ConditionText")?.textContent?.trim() ||
           "",
+          
         SelectValue:
           document.getElementById("SelectValueTrigger")?.getAttribute("data-value") ||
           document.getElementById("SelectValueText")?.textContent?.trim() || "",
