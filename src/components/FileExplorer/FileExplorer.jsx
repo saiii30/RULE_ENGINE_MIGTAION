@@ -189,6 +189,71 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
       {/* <button onClick={handleAddParent}>Add Parent</button> */}
       <div style={{ marginTop: 20 }}>{renderTree(Store.treedata)}</div>
 
+        {Store.menudrop && (
+        <div
+          className="fixed top-16 left-4 bg-white shadow-xl rounded-lg p-4 w-48 z-50 border"
+        >
+          <button
+            className="absolute top-1 right-2 text-xl text-gray-500"
+            onClick={() =>Store.menudrop = false}
+          >
+            ✕
+          </button>
+ 
+          <h3 className="text-lg font-semibold mb-3">Actions</h3>
+ 
+          <div className="flex flex-col gap-3">
+ 
+            {/* + Button */}
+            <button
+              className="flex items-center gap-2 p-2 bg-emerald-600 text-white rounded-md"
+              onClick={() => {
+               Store.menudrop = false;
+                Store.isSidebarVisible1 = true;
+              }}
+            >
+              <FaPlus /> Add
+            </button>
+ 
+            {/* Save */}
+            <button
+              className="p-2 bg-blue-600 text-white rounded-md"
+              onClick={() => {
+                Store.menudrop = false;
+                Store.saveFile();
+              }}
+            >
+              Save
+            </button>
+ 
+            {/* Save As */}
+            <button
+              className="p-2 bg-blue-600 text-white rounded-md"
+              onClick={() => {
+                Store.menudrop = false;
+                Store.saveFileAs();
+              }}
+            >
+              Save As
+            </button>
+ 
+            {/* Download */}
+            <button
+              className="p-2 bg-blue-600 text-white rounded-md"
+              onClick={() => {
+                Store.menudrop = false;
+                Store.downloadLastExport();
+              }}
+            >
+              Download
+            </button>
+ 
+          </div>
+        </div>
+      )}
+ 
+    
+
 
   </div>
     )

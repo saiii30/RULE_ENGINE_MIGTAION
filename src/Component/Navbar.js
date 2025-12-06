@@ -43,7 +43,7 @@ const Navbar = observer(() => {
        
  
         <IoMenu
-            onClick={Store.handleMenuClick}
+            onClick={() => Store.menudrop = true}
             className='text-xl lg:text-3xl cursor-pointer text-gray-500'
           />
          

@@ -31,6 +31,7 @@ const Store = observable({
   isLoggedIn : false,
   parentId : "",
   conditionidvalue : [],
+  menudrop : false,
 
   async login() {
     try {
