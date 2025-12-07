@@ -849,7 +849,7 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
     return (
         <div style={{ padding: "20px" ,width: "85%",background: "#f2f2f3",height : "100%",position : "relative"}}>
 
-       <div
+       {/* <div
         style={{
          
           display: "flex",
@@ -898,7 +898,7 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
       
         
         
-      </div>
+      </div> */}
       {/* Table header - only once */}
       <div
   style={{

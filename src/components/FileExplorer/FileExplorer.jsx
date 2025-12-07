@@ -187,32 +187,34 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
         <div style={{width : "15%",padding: "8px",position : "relative",background :"#1f2937",height : "100%",color : "white",overflowY : "auto"}}>
 
       {/* <button onClick={handleAddParent}>Add Parent</button> */}
-      <div style={{ marginTop: 20 }}>{renderTree(Store.treedata)}</div>
+      <div style={{ marginTop: 20,position : "relative" }}>{renderTree(Store.treedata)}</div>
 
         {Store.menudrop && (
         <div
-          className="fixed top-16 left-4 bg-white shadow-xl rounded-lg p-4 w-48 z-50 border"
+          className="bg-white shadow-xl rounded-lg  z-50 border"
+          style={{position : "absolute",top : "0px",width :"120px",height : "220px",padding : "10px",left : "70px"}}
         >
           <button
-            className="absolute top-1 right-2 text-xl text-gray-500"
+           
             onClick={() =>Store.menudrop = false}
           >
             ✕
           </button>
  
-          <h3 className="text-lg font-semibold mb-3">Actions</h3>
+          
  
-          <div className="flex flex-col gap-3">
+          <div style={{marginTop : "2px",display : "flex",flexDirection : "column",gap : "10px"  }}>
  
             {/* + Button */}
             <button
-              className="flex items-center gap-2 p-2 bg-emerald-600 text-white rounded-md"
+            style={{marginTop : "10px"}}
+              className="p-2 bg-blue-600 text-white rounded-md"
               onClick={() => {
                Store.menudrop = false;
                 Store.isSidebarVisible1 = true;
               }}
             >
-              <FaPlus /> Add
+              Add
             </button>
  
             {/* Save */}
