@@ -163,6 +163,7 @@ export const Task = observer(({
   Condition,
   SelectValue,
   Flag,
+  Actions,
   column,
   columnvalue,
   columnId,
@@ -278,13 +279,34 @@ export const Task = observer(({
         {SelectValue}
       </a>
       <div onClick={() => editvalue(id,"Flag")} style={{ cursor: "pointer" }}>{Flag}</div>
-      <div>Edit Action</div>
+      <div  onClick={() => Store.setShowDataPopup(true)}>{Actions}</div>
 
       <div className="actions">
         <button style={{height: "30px"}} onPointerDown={(e) => e.stopPropagation()} onClick={() => handleDeleteRule(columnId,id)}>
           <MdDelete/>
         </button>
       </div>
+
+       {Store.showDataPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-80 shadow-xl">
+            <h2 className="text-xl font-semibold mb-4">Entered Data</h2>
+
+            {Store.rows.map((row, i) => (
+              <p key={i} className="mb-2">
+                <b>Label:</b> {row.label} | <b>Type:</b> {row.type}
+              </p>
+            ))}
+
+            <button
+              onClick={() => Store.setShowDataPopup(false)}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <style>
         {`

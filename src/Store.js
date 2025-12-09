@@ -32,6 +32,29 @@ const Store = observable({
   parentId : "",
   conditionidvalue : [],
   menudrop : false,
+  open: false,
+  showDataPopup: false,
+  rows: [],
+
+  setOpen(value) {
+    Store.open = value;
+  },
+
+  setShowDataPopup(value) {
+    Store.showDataPopup = value;
+  },
+
+  addRow() {
+    Store.rows.push({ label: "", type: "" });
+  },
+
+  updateRow(index, key, value) {
+    Store.rows[index][key] = value;
+  },
+
+  deleteRow(index) {
+    Store.rows.splice(index, 1);
+  },
 
   async login() {
     try {
