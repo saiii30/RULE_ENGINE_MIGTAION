@@ -919,6 +919,85 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
   ))}
 </div>
 
+{Store.open && (
+  <div
+    className="fixed inset-0 bg-black/50 flex items-center justify-center"
+    style={{
+      zIndex: 999,
+    }}
+  >
+    <div
+      className="bg-white rounded-xl shadow-xl text-black p-6"
+      style={{
+        width: 500,
+        height: 300,
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: "8px",
+      }}
+    >
+      <h2 className="text-xl font-semibold mb-4">Add Fields</h2>
+
+      {/* ADD BUTTON */}
+      <button
+        onClick={() => Store.addRow()}
+        className="mb-3 px-3 py-1 bg-green-600 text-white rounded-lg w-fit"
+      >
+        + Add
+      </button>
+
+      {/* ⭐ SCROLLABLE ROW LIST ⭐ */}
+      <div style={{overflowY : "auto"}} className="flex-1  pr-1">
+        {Store.rows.map((row, index) => (
+          <div key={index} className="flex items-center gap-2 mb-3 " style={{justifyContent : "space-evenly",marginTop : "10px"}}>
+            
+            <input
+              type="text"
+              placeholder="Enter label"
+              value={row.label}
+              onChange={(e) => Store.updateRow(index, "label", e.target.value)}
+              className="border p-2 rounded w-1/3"
+            />
+
+            <select
+              value={row.type}
+              onChange={(e) => Store.updateRow(index, "type", e.target.value)}
+              className="border p-2 rounded w-1/3"
+            >
+              <option value="">Select type</option>
+              <option value="String">String</option>
+              <option value="Number">Number</option>
+              <option value="Boolean">Boolean</option>
+            </select>
+
+            {/* DELETE BUTTON */}
+
+            
+            <button
+              onClick={() => Store.deleteRow(index)}
+              className="px-3 py-2 bg-red-500 text-white rounded-lg"
+            >
+              Delete
+            </button>
+
+          </div>
+        ))}
+      </div>
+
+      {/* FOOTER BUTTON */}
+      <div className="mt-3 flex justify-end">
+        <button
+          onClick={() => Store.setOpen(false)}
+          className="px-4 py-2 bg-gray-300 rounded-lg"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div

@@ -288,25 +288,32 @@ export const Task = observer(({
       </div>
 
        {Store.showDataPopup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-80 shadow-xl">
-            <h2 className="text-xl font-semibold mb-4">Entered Data</h2>
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+    <div
+      className="bg-white p-6 rounded-xl shadow-xl w-80 flex flex-col"
+      style={{ height: 300 }}
+    >
+      <h2 className="text-xl font-semibold mb-3">Actions</h2>
 
-            {Store.rows.map((row, i) => (
-              <p key={i} className="mb-2">
-                <b>Label:</b> {row.label} | <b>Type:</b> {row.type}
-              </p>
-            ))}
+      {/* ⭐ SCROLL AREA ⭐ */}
+      <div style={{overflowY : "auto",marginTop : "10px"}}  className="flex-1  pr-1 ">
+        {Store.rows.map((row, i) => (
+          <p key={i} className="mb-2">
+            <b>Label:</b> {row.label} | <b>Type:</b> {row.type}
+          </p>
+        ))}
+      </div>
 
-            <button
-              onClick={() => Store.setShowDataPopup(false)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      <button
+        onClick={() => Store.setShowDataPopup(false)}
+        className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-xl"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
 
       <style>
         {`

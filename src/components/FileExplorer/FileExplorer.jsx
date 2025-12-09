@@ -278,73 +278,7 @@ Store.menudrop = false;
       </button>
 
 
-      {Store.open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl  shadow-xl text-black" style={{width : "400px"}}>
-            <h2 className="text-xl font-semibold mb-4">Add Fields</h2>
-
-            <button
-              onClick={() => Store.addRow()}
-              className="mb-4 px-3 py-1 bg-green-600 text-white rounded-lg"
-            >
-              + Add
-            </button>
-
-            {/* ROWS */}
-            {Store.rows.map((row, index) => (
-  <div key={index} className="flex items-center gap-2 mb-3">
-
-    <input
-      type="text"
-      placeholder="Enter label"
-      value={row.label}
-      onChange={(e) => Store.updateRow(index, "label", e.target.value)}
-      className="border p-2 rounded w-1/3"
-    />
-
-    <select
-      value={row.type}
-      onChange={(e) => Store.updateRow(index, "type", e.target.value)}
-      className="border p-2 rounded w-1/3"
-    >
-      <option value="">Select type</option>
-      <option value="String">String</option>
-      <option value="Number">Number</option>
-      <option value="Boolean">Boolean</option>
-    </select>
-
-    {/* DELETE BUTTON */}
-    <button
-      onClick={() => Store.deleteRow(index)}
-      className="px-3 py-2 bg-red-500 text-white rounded-lg"
-    >
-      Delete
-    </button>
-  </div>
-))}
-
-
-
-
-            {/* BUTTONS */}
-            <div className="flex justify-between mt-4">
-              {/* <button
-                onClick={() => Store.setShowDataPopup(true)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-xl"
-              >
-                Show
-              </button> */}
-
-              <button
-                onClick={() => Store.setOpen(false)}
-                className="px-4 py-2 bg-gray-300 rounded-xl"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* SHOW DATA POPUP */}
      
