@@ -290,17 +290,29 @@ export const Task = observer(({
        {Store.showDataPopup && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
     <div
-      className="bg-white p-6 rounded-xl shadow-xl w-80 flex flex-col"
-      style={{ height: 300 }}
+      className="bg-white p-6 rounded-xl shadow-xl flex flex-col"
+      style={{ height: 300,width: 400 }}
     >
       <h2 className="text-xl font-semibold mb-3">Actions</h2>
 
-      {/* ⭐ SCROLL AREA ⭐ */}
-      <div style={{overflowY : "auto",marginTop : "10px"}}  className="flex-1  pr-1 ">
+      {/* Scroll Area */}
+      <div
+        style={{ overflowY: "auto", marginTop: "10px" }}
+        className="flex-1 pr-1"
+      >
         {Store.rows.map((row, i) => (
-          <p key={i} className="mb-2">
-            <b>Label:</b> {row.label} | <b>Type:</b> {row.type}
-          </p>
+          <div
+            key={i}
+            style={{
+              padding: "8px",
+              borderRadius: "6px",
+              marginBottom: "8px",
+              backgroundColor: "#f7f7f7",
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: "bold" }}>{row.label}</p>
+            <p style={{ margin: 0, color: "gray" }}>{row.type}</p>
+          </div>
         ))}
       </div>
 
@@ -313,6 +325,7 @@ export const Task = observer(({
     </div>
   </div>
 )}
+
 
 
       <style>

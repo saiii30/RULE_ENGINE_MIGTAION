@@ -8,6 +8,7 @@ import Store from "../../Store";
 import { useEffect } from "react";
 import { observer } from "mobx-react";
 import { useState } from "react";
+import './FileExplorer.css'
 export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode,setHoverId,hoverId}) => {
 
   useEffect(() => {
@@ -215,67 +216,68 @@ Store.menudrop = false;
         {Store.menudrop && (
         <div
           className="bg-white shadow-xl rounded-lg  z-50 border"
-          style={{position : "absolute",top : "0px",width :"120px",height : "270px",padding : "10px",left : "70px"}}
+          style={{position : "absolute",top : "0px",width :"120px",height : "220px",padding : "10px",left : "70px"}}
         >
-          <button
-           
+          <div
+           style={{display : 'flex',alignItems : "center",justifyContent : "flex-end",width : "100%",color : "black",cursor : "pointer"}}
             onClick={() =>Store.menudrop = false}
+             className="menu-item"
           >
             ✕
-          </button>
+          </div>
  
           
  
-          <div style={{marginTop : "2px",display : "flex",flexDirection : "column",gap : "10px"  }}>
+          <div style={{marginTop : "2px",display : "flex",flexDirection : "column",gap : "10px" ,color : "black",cursor : "pointer"}}>
  
             {/* + Button */}
-            <button
+            <div
             style={{marginTop : "10px"}}
-              className="p-2 bg-blue-600 text-white rounded-md"
+               className="menu-item"
               onClick={Tableselect}
             >
               Add
-            </button>
+            </div>
  
             {/* Save */}
-            <button
-              className="p-2 bg-blue-600 text-white rounded-md"
+            <div
+                className="menu-item"
               onClick={() => {
                 Store.menudrop = false;
                 Store.saveFile();
               }}
             >
               Save
-            </button>
+            </div>
  
             {/* Save As */}
-            <button
-              className="p-2 bg-blue-600 text-white rounded-md"
+            <div
+             className="menu-item"
               onClick={() => {
                 Store.menudrop = false;
                 Store.saveFileAs();
               }}
             >
               Save As
-            </button>
+            </div>
  
             {/* Download */}
-            <button
-              className="p-2 bg-blue-600 text-white rounded-md"
+            <div
+              className="menu-item"
               onClick={() => {
                 Store.menudrop = false;
                 Store.downloadLastExport();
               }}
             >
               Download
-            </button>
+            </div>
 
-            <button
+            <div
         onClick={() => Store.setOpen(true)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+       className="menu-item"
       >
         Action
-      </button>
+      </div>
 
 
       

@@ -1,0 +1,9 @@
+.menu-item {
+  padding: 3px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0; /* light grey */
+}
