@@ -37,15 +37,19 @@ const Store = observable({
   rows: [],
 
   setOpen(value) {
+    Store.menudrop = false;
     Store.open = value;
   },
 
   setShowDataPopup(value) {
     Store.showDataPopup = value;
   },
+  updateRowValue(index, value) {
+  this.rows[index].value = value;
+},
 
   addRow() {
-    Store.rows.push({ label: "", type: "" });
+    Store.rows.push({ label: "", type: "" ,value: ""  });
   },
 
   updateRow(index, key, value) {

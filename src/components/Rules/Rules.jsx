@@ -12,6 +12,8 @@ import { observer } from "mobx-react";
 import { FaPlus, FaMinus, FaExpandArrowsAlt } from "react-icons/fa";
 import { useEffect } from "react";
 import Store from "../../Store";
+import { IoClose } from "react-icons/io5";
+
 export const Rules = observer(({globalId,setGlobalId,handleAddGroup}) =>{
  const tablerow = [
     
@@ -936,7 +938,19 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
         borderRadius: "8px",
       }}
     >
-      <h2 className="text-xl font-semibold mb-4">Add Fields</h2>
+      <div style={{display : "flex",alignItems : "center",justifyContent : "space-between"}} >
+        <h2 className="text-xl font-semibold mb-8">Add Fields</h2>
+<button
+  onClick={() => Store.setOpen(false)}
+  className="text-gray-600 hover:text-red-600"
+>
+  <IoClose size={22} />
+</button>
+
+        </div>
+      
+
+     
 
       {/* ADD BUTTON */}
       <button
@@ -945,6 +959,8 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
       >
         + Add
       </button>
+
+
 
       {/* ⭐ SCROLLABLE ROW LIST ⭐ */}
       <div style={{overflowY : "auto"}} className="flex-1  pr-1">
@@ -968,6 +984,7 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
               <option value="String">String</option>
               <option value="Number">Number</option>
               <option value="Boolean">Boolean</option>
+              <option value="Date">Date</option>
             </select>
 
             {/* DELETE BUTTON */}
@@ -982,17 +999,13 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
 
           </div>
         ))}
+
+
+        
       </div>
 
       {/* FOOTER BUTTON */}
-      <div className="mt-3 flex justify-end">
-        <button
-          onClick={() => Store.setOpen(false)}
-          className="px-4 py-2 bg-gray-300 rounded-lg"
-        >
-          Cancel
-        </button>
-      </div>
+      
     </div>
   </div>
 )}
