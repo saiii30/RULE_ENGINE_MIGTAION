@@ -46,31 +46,7 @@ export const Task = observer(({
     }
   };
 
-  // Handle selecting a number
-  const handleSelectCondition = (value, taskId) => {
-  alert(value);
-  alert(taskId);
-
-  // Find the column that contains this task
-  const colIndex = Store.column.findIndex(col =>
-    col.tasks?.some(task => task.id === taskId)
-  );
-
-  if (colIndex === -1) return;
-
-  // Find the task inside the column
-  const taskIndex = Store.column[colIndex].tasks.findIndex(task => task.id === taskId);
-
-  if (taskIndex === -1) return;
-
-  // Update only that task's ConditionId
-  Store.column[colIndex].tasks[taskIndex] = {
-    ...Store.column[colIndex].tasks[taskIndex],
-    ConditionId: value
-  };
-
-  setOpenDropdown(false);
-};
+ 
 
 const updateRowValue = (index, val) => {
   Store.rows[index].selectedValue = val;
@@ -128,40 +104,17 @@ const fetchDropdownValues = async (rowIndex) => {
         >
           {ConditionId || "Edit Condition"}
         </div>
-
-        {/* {openDropdown && (
-          <select
-            style={{
-              position: "absolute",
-              top: "0px",
-              left: "10px",
-              width: "120px",
-              padding: "5px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              background: "#fff",
-              zIndex: 12,
-            }}
-            onChange={(e) => handleSelectCondition(e.target.value,id)}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <option value="">Select</option>
-            {getConditionDropdownNumbers(columnvalue).map(num => (
-              <option key={num} value={num}>{num}</option>
-            ))}
-          </select>
-        )} */}
       </div>
 
-      <div onClick={() => editvalue(id,"SelectAttribute")} style={{ cursor: "pointer" }}>{SelectAttribute}</div>
-      <div onClick={() => editvalue(id,"Condition")} style={{ cursor: "pointer" }}>{Condition}</div>
+      <a onClick={() => editvalue(id,"SelectAttribute")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{SelectAttribute}</a>
+      <a onClick={() => editvalue(id,"Condition")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{Condition}</a>
       <a 
         onClick={() => editvalue(id, "SelectValue")} 
         style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}
       >
         {SelectValue}
       </a>
-      <div onClick={() => editvalue(id,"Flag")} style={{ cursor: "pointer" }}>{Flag}</div>
+      <a onClick={() => editvalue(id,"Flag")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{Flag}</a>
       <div  onClick={() => Store.setShowDataPopup(true)}>{Actions}</div>
 
       <div className="actions">
@@ -171,7 +124,7 @@ const fetchDropdownValues = async (rowIndex) => {
       </div>
 
        {Store.showDataPopup && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div
       className="bg-white p-6 rounded-xl shadow-xl flex flex-col"
       style={{ height: 300,width: 400 }}
@@ -197,6 +150,8 @@ const fetchDropdownValues = async (rowIndex) => {
     <p style={{ margin: 0, fontWeight: "bold" }}>{row.label}</p>
 
     {/* Dropdown for ALL types */}
+
+    
    <select
   value={row.selectedValue || ""}
   onClick={() => fetchDropdownValues(i)} // fetch on click

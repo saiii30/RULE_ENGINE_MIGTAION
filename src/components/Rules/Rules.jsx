@@ -845,15 +845,10 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
 };
 
 const selectCollection = async (name) => {
-  const field = encodeURIComponent(Store.selectedCollection);
 
- 
-    // Add the row AFTER fetching values, pass array
     addRow(name);
-
-   
-
     Store.isSidebarVisible2 = false;
+    Store.open = ! Store.open;
   
 };
 
