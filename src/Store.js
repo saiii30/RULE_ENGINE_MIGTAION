@@ -35,6 +35,8 @@ const Store = observable({
   open: false,
   showDataPopup: false,
   rows: [],
+  isSidebarVisible2 : false,
+  selectedCollection : "",
 
   setOpen(value) {
     Store.menudrop = false;

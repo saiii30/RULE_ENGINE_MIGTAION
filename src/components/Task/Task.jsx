@@ -72,6 +72,34 @@ export const Task = observer(({
   setOpenDropdown(false);
 };
 
+const updateRowValue = (index, val) => {
+  Store.rows[index].selectedValue = val;
+}
+
+
+const fetchDropdownValues = async (rowIndex) => {
+  const row = Store.rows[rowIndex];
+
+  try {
+    const field = encodeURIComponent(row.label);
+    const res = await fetch(`http://localhost:4000/values/${field}`);
+    const result = await res.json();
+
+    let arr = [];
+    if (Array.isArray(result)) arr = result;
+    else if (result?.values) arr = result.values;
+
+    // Replace default values with fetched values
+    row.value = arr.length > 0 ? arr : ["No options available"];
+
+    // Clear selected value if needed
+    row.selectedValue = "";
+  } catch (err) {
+    console.error("Error fetching dropdown values:", err);
+    row.value = ["Error loading"];
+  }
+};
+
 
 
   return (
@@ -155,21 +183,7 @@ export const Task = observer(({
         style={{ overflowY: "auto", marginTop: "10px" }}
         className="flex-1 pr-1"
       >
-        {/* {Store.rows.map((row, i) => (
-          <div
-            key={i}
-            style={{
-              padding: "8px",
-              borderRadius: "6px",
-              marginBottom: "8px",
-              backgroundColor: "#f7f7f7",
-            }}
-          >
-            <p style={{ margin: 0, fontWeight: "bold" }}>{row.label}</p>
-            <p style={{ margin: 0, color: "gray" }}>{row.type}</p>
-          </div>
-        ))} */}
-
+        
         {Store.rows.map((row, i) => (
   <div
     key={i}
@@ -182,50 +196,25 @@ export const Task = observer(({
   >
     <p style={{ margin: 0, fontWeight: "bold" }}>{row.label}</p>
 
-    {/* 📅 DATE */}
-    {row.type === "Date" ? (
-      <input
-        type="date"
-        value={row.value || ""}
-        onChange={(e) =>
-          Store.updateRowValue(i, e.target.value)
-        }
-        className="border p-2 rounded w-full mt-1"
-      />
-    ) : row.type === "Boolean" ? (
-      <div className="flex gap-6 mt-2">
-        {/* ✅ TRUE */}
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={row.value === true}
-            onChange={() => Store.updateRowValue(i, true)}
-          />
-          True
-        </label>
+    {/* Dropdown for ALL types */}
+   <select
+  value={row.selectedValue || ""}
+  onClick={() => fetchDropdownValues(i)} // fetch on click
+  onChange={(e) => updateRowValue(i, e.target.value)}
+  className="border p-2 rounded w-full mt-1"
+>
+  {Array.isArray(row.value) &&
+    row.value.map((option, idx) => (
+      <option key={idx} value={option}>
+        {option}
+      </option>
+    ))}
+</select>
 
-        {/* ❌ FALSE */}
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={row.value === false}
-            onChange={() => Store.updateRowValue(i, false)}
-          />
-          False
-        </label>
-      </div>
-    ) : (
-      <input
-        type={row.type === "Number" ? "number" : "text"}
-        value={row.value || ""}
-        onChange={(e) =>
-          Store.updateRowValue(i, e.target.value)
-        }
-        className="border p-2 rounded w-full mt-1"
-      />
-    )}
+
   </div>
 ))}
+
 
 
       </div>

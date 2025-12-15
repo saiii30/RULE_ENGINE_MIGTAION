@@ -53,6 +53,8 @@ const Tableselect = async() =>{
     await Store.fetchCollections();
 }
 
+
+
 const popupSections = {
 
   ConditionId: (row) => `
@@ -842,6 +844,33 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
   }
 };
 
+const selectCollection = async (name) => {
+  const field = encodeURIComponent(Store.selectedCollection);
+
+ 
+    // Add the row AFTER fetching values, pass array
+    addRow(name);
+
+   
+
+    Store.isSidebarVisible2 = false;
+  
+};
+
+const addRow = (name) => {
+  Store.rows.push({
+    label: name,
+    type: "",
+   
+  });
+};
+
+
+const popupVisible = () => {
+  Store.isSidebarVisible2 = !Store.isSidebarVisible2;
+  Store.open = ! Store.open;
+}
+
   const toggleCollapse = (groupId) => {
     Store.column= Store.column.map((col) =>
   col.id === groupId ? { ...col, collapsed: !col.collapsed } : col
@@ -947,18 +976,28 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
   <IoClose size={22} />
 </button>
 
+
+
         </div>
       
 
      
 
       {/* ADD BUTTON */}
-      <button
+      <div style={{width : "100%",display : "flex",alignItems : "center",justifyContent : "space-evenly"}}>
+      <button style={{width : "40%"}}
         onClick={() => Store.addRow()}
         className="mb-3 px-3 py-1 bg-green-600 text-white rounded-lg w-fit"
       >
         + Add
       </button>
+       <button style={{width : "40%"}}
+        onClick={() => popupVisible()}
+        className="mb-3 px-3 py-1 bg-green-600 text-white rounded-lg w-fit"
+      >
+        + Add Source from DB
+      </button>
+      </div>
 
 
 
@@ -1009,6 +1048,56 @@ Store.column = arrayMove(Store.column, oldIndex, newIndex);
     </div>
   </div>
 )}
+
+{Store.isSidebarVisible2 && (
+        <div
+        
+          style={{
+            position: "absolute",
+            top: "40%",
+            left: "40%",
+            transform: "translate(-50%, -50%)",
+            background: "#fff",
+            padding: 20,
+            borderRadius: 8,
+            zIndex: 2000,
+            width: 360,
+            height : 300,
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            zIndex: 1000,
+            overflowY: "auto",
+          }}
+        >
+          <button onClick={() => popupVisible()} style={{ position: "absolute", right: 12, top: 12, border: "none", background: "red", fontSize: 18 , padding:4, }}>
+            ✕
+          </button>
+
+      
+            <h3 style={{ marginBottom: 12 }}>Select a Collection</h3>
+
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {(Store.columns || []).map((table, idx) => (
+              <li
+                key={idx}
+                onClick={() => selectCollection(table)}
+                
+                style={{
+                  padding: "8px 10px",
+                  cursor: "pointer",
+                  borderRadius: 6,
+                  marginBottom: 6,
+                  
+                }}
+              >
+                {table}
+              </li>
+            ))}
+          </ul>
+
+          
+        </div>
+      )}
 
 
       
