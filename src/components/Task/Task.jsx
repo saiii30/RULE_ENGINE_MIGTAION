@@ -28,28 +28,17 @@ export const Task = observer(({
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
-  // State to manage open dropdown for ConditionId
-  const [openDropdown, setOpenDropdown] = useState(false);
+const toggleDropdown = (index) => {
+  Store.rows.forEach((r, i) => {
+    r.open = i === index ? !r.open : false;
+  });
+}
 
-  // Function to get dropdown numbers
-  const getConditionDropdownNumbers = (col) => {
-    
-    if (col.type === "rule") {
-      
-      
-      return Array.from({ length: Store.column.length }, (_, i) => i + 1);
-    } else {
-      
-      const targetCol = Store.column.find((c) => c.id === col.id);
-      const taskLength = targetCol?.tasks?.length || 0;
-      return Array.from({ length: taskLength }, (_, i) => i + 1);
-    }
-  };
 
- 
 
 const updateRowValue = (index, val) => {
   Store.rows[index].selectedValue = val;
+  Store.rows[index].open = false;
 }
 
 
@@ -68,8 +57,7 @@ const fetchDropdownValues = async (rowIndex) => {
     // Replace default values with fetched values
     row.value = arr.length > 0 ? arr : ["No options available"];
 
-    // Clear selected value if needed
-    row.selectedValue = "";
+   
   } catch (err) {
     console.error("Error fetching dropdown values:", err);
     row.value = ["Error loading"];
@@ -115,7 +103,7 @@ const fetchDropdownValues = async (rowIndex) => {
         {SelectValue}
       </a>
       <a onClick={() => editvalue(id,"Flag")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{Flag}</a>
-      <div  onClick={() => Store.setShowDataPopup(true)}>{Actions}</div>
+      <a style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }} onClick={() => Store.setShowDataPopup(true)}>{Actions}</a>
 
       <div className="actions">
         <button style={{height: "30px"}} onPointerDown={(e) => e.stopPropagation()} onClick={() => handleDeleteRule(columnId,id)}>
@@ -133,7 +121,7 @@ const fetchDropdownValues = async (rowIndex) => {
 
       {/* Scroll Area */}
       <div
-        style={{ overflowY: "auto", marginTop: "10px" }}
+      
         className="flex-1 pr-1"
       >
         
@@ -145,26 +133,53 @@ const fetchDropdownValues = async (rowIndex) => {
       borderRadius: "6px",
       marginBottom: "8px",
       backgroundColor: "#f7f7f7",
+      position: "relative",
     }}
   >
     <p style={{ margin: 0, fontWeight: "bold" }}>{row.label}</p>
 
-    {/* Dropdown for ALL types */}
 
-    
-   <select
-  value={row.selectedValue || ""}
-  onClick={() => fetchDropdownValues(i)} // fetch on click
-  onChange={(e) => updateRowValue(i, e.target.value)}
-  className="border p-2 rounded w-full mt-1"
->
-  {Array.isArray(row.value) &&
-    row.value.map((option, idx) => (
-      <option key={idx} value={option}>
-        {option}
-      </option>
-    ))}
-</select>
+<div className="relative mt-1">
+  {/* Dropdown trigger */}
+  <div
+    className="border p-2 rounded bg-white cursor-pointer flex justify-between items-center"
+    onClick={() => {
+      if (!row.value || row.value.length === 0) fetchDropdownValues(i);
+      toggleDropdown(i);
+    }}
+  >
+    <span className="text-sm">
+      {row.selectedValue || "Select option"}
+    </span>
+    <span className="text-gray-500">▼</span>
+  </div>
+
+  {/* Dropdown list */}
+  {row.open && (
+    <div
+      className="absolute left-0 w-full bg-white border rounded shadow-lg z-10"
+      style={{ height: "200px", overflowY: "auto" }} // only 5 items visible
+    >
+      {Array.isArray(row.value) && row.value.length > 0 ? (
+        row.value.map((option, idx) => (
+          <div
+            key={idx}
+            className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+            onClick={() => updateRowValue(i, option)}
+          >
+            {option}
+          </div>
+        ))
+      ) : (
+        <div className="px-3 py-2 text-gray-400 text-sm">
+          Loading...
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
+
 
 
   </div>

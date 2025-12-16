@@ -856,6 +856,8 @@ const addRow = (name) => {
   Store.rows.push({
     label: name,
     type: "",
+    open: false,
+    
    
   });
 };

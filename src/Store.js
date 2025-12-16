@@ -51,7 +51,7 @@ const Store = observable({
 },
 
   addRow() {
-    Store.rows.push({ label: "", type: "" ,value: ""  });
+    Store.rows.push({ label: "", type: "" ,value: "" ,selectedValue: "", open: false});
   },
 
   updateRow(index, key, value) {
@@ -831,6 +831,7 @@ buildSnapshot() {
   
   const tree = toJS(this.treedata);
   const column = toJS(this.column);
+  const row = toJS(this.rows);
 
  
   
@@ -844,6 +845,7 @@ buildSnapshot() {
 
     tree,
     column,
+    row,
     
     selectedCollections: toJS(this.selectedCollections || []),
     activeCollection: this.activeCollection || null,
@@ -996,7 +998,7 @@ downloadLastExport: action(async () => {
     inputOptions: {
       json: "JSON",
       csv: "CSV",
-      word: "Word (.docx)"
+      word: "Word (.docx)",
     },
     inputPlaceholder: "Select a format",
     showCancelButton: true,
@@ -1004,30 +1006,63 @@ downloadLastExport: action(async () => {
 
   if (!format) return;
 
-  let blob, filename;
-  const parsed = JSON.parse(Store.lastExportedData);
-
+  // ✅ JSON
   if (format === "json") {
-    blob = new Blob([Store.lastExportedData], { type: "application/json" });
-    filename = Store.currentFileName || "package.json";
-  } else if (format === "csv") {
-    const csv = Store.convertSnapshotToCSV();
-    blob = new Blob([csv], { type: "text/csv" });
-    filename = (Store.currentFileName || "package").replace(/\.json$/, ".csv");
-  } else if (format === "word") {
-    blob = new Blob(["Word export not implemented yet"], { type: "application/msword" });
-    filename = (Store.currentFileName || "package").replace(/\.json$/, ".docx");
+    const blob = new Blob([Store.lastExportedData], {
+      type: "application/json",
+    });
+
+    Store.downloadBlob(blob, Store.currentFileName || "package.json");
+
+    Swal.fire("Downloaded", "JSON file downloaded", "success");
   }
 
+  // ✅ CSV (DOWNLOAD 2 FILES)
+  else if (format === "csv") {
+
+    // 1️⃣ Rules CSV
+    const rulesCSV = Store.convertSnapshotToCSV();
+    const rulesBlob = new Blob([rulesCSV], { type: "text/csv" });
+    Store.downloadBlob(rulesBlob, "RulesExport.csv");
+
+    // 2️⃣ Actions CSV
+    const actionsCSV = Store.convertActionSnapshotToCSV();
+    const actionsBlob = new Blob([actionsCSV], { type: "text/csv" });
+    Store.downloadBlob(actionsBlob, "ActionsExport.csv");
+
+    Swal.fire(
+      "Downloaded",
+      "RulesExport.csv and ActionsExport.csv downloaded",
+      "success"
+    );
+  }
+
+  // ✅ WORD
+  else if (format === "word") {
+    const blob = new Blob(
+      ["Word export not implemented yet"],
+      { type: "application/msword" }
+    );
+
+    const filename = (Store.currentFileName || "package").replace(
+      /\.json$/,
+      ".docx"
+    );
+
+    Store.downloadBlob(blob, filename);
+
+    Swal.fire("Downloaded", `File saved as ${filename}`, "success");
+  }
+}),
+downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
-
-  Swal.fire("Downloaded", `File saved as ${filename}`, "success");
-}),
+}
+,
 
 
 ///////
@@ -1093,6 +1128,30 @@ saveFileAs: action(async () => {
 }),
 
 ///////////////////////////////////////////////////changed 6th method autodownload in exportflow and added above function here/////
+
+convertActionSnapshotToCSV: () => {
+
+  let csvLines = [];
+
+  Store.column.forEach((col, index) => {
+
+    const action = `Action${index + 1}`;
+    const rule = `Rule${index + 1}`;
+
+    // collect all row selected values
+    const rowValues = Store.rows.map(row => row.selectedValue );
+
+    const line = [
+      action,
+      rule,
+      ...rowValues
+    ].join(" | ");
+
+    csvLines.push(line);
+  });
+
+  return csvLines.join("\n");
+},
 
 convertSnapshotToCSV: () => {
 
