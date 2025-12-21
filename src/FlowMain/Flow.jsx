@@ -93,42 +93,43 @@ useEffect(() => {
 
          setPopupOpen(false);
       };
+const handlePopupSelect = (label) => {
+  if (!selectedNode) return;
 
-  const handlePopupSelect = (label) => {
-    
-        if (!selectedNode) return;
-    
-        // Stop adding children to level 2
-        if (selectedNode.level === 2) {
-          setPopupOpen(false);
-          return;
-        }
-        
-        const newChild = {
-          id: Date.now().toString(),
-          name: label,
-          children: [],
-          isOpen: true,
-          level: selectedNode.level + 1,
-          ruleGroups: selectedNode.level + 1 === 2 ? [] : undefined,
-        };
-    
-        const updateTree = (nodes) =>
-      nodes.map((n) => {
-        if (n.id === selectedNode.id) {
-          return { ...n, children: [...n.children, newChild] };
-        }
-        if (n.children?.length) {
-          return { ...n, children: updateTree(n.children) };
-        }
-        return n;
-      });
-    
-       Store.setTreedata(updateTree(Store.treedata));
-      Store.isSidebarVisible1 = false;
-      
-        setPopupOpen(false);
-      };
+  // Stop adding children to level 2
+  if (selectedNode.level === 2) {
+    setPopupOpen(false);
+    return;
+  }
+
+  const newChild = {
+    id: Date.now().toString(),
+    name: label,
+    children: [],
+    isOpen: true,
+    level: selectedNode.level + 1,
+    ruleGroups: selectedNode.level + 1 === 2 ? [] : undefined,
+  };
+
+  const updateTree = (nodes) => {
+    return nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        // ✅ Found the target node, add child and return updated node
+        return { ...n, children: [...n.children, newChild] };
+      } else if (n.children?.length) {
+        // Recurse only if child contains the selected node
+        return { ...n, children: updateTree(n.children) };
+      } else {
+        return n; // untouched node
+      }
+    });
+  };
+
+  Store.setTreedata(updateTree(Store.treedata));
+  Store.isSidebarVisible1 = false;
+  setPopupOpen(false);
+};
+
 
 
 
