@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import Store from "../../Store";
 import { IoClose } from "react-icons/io5";
 
-export const Rules = observer(({globalId,setGlobalId,handleAddGroup}) =>{
+export const Rules = observer(({globalId,setGlobalId,handleAddGroup,selectedNode,ruleCounter,setRuleCounter}) =>{
  const tablerow = [
     
     "ConditionSetId",
@@ -337,15 +337,16 @@ const popupSections = {
 const getConditionDropdownNumbers = (col) => {
     
     if (col.type === "rule") {
-      
-      
-      return Array.from({ length: Store.column.length }, (_, i) => i + 1);
-    } else {
-      
-      const targetCol = Store.column.find((c) => c.id === col.id);
-      const taskLength = targetCol?.tasks?.length || 0;
-      return Array.from({ length: taskLength }, (_, i) => i + 1);
-    }
+  // For a rule directly under sub-child, return 1..number of ruleGroups
+  const taskLength = selectedNode?.ruleGroups?.length || 0;
+  return Array.from({ length: taskLength }, (_, i) => i + 1);
+} else if (col.type === "group") {
+  // Find this group inside selectedNode.ruleGroups
+  const targetGroup = selectedNode?.ruleGroups?.find((rg) => rg.id === col.id);
+  const taskLength = targetGroup?.rules?.length || 0;
+  return Array.from({ length: taskLength }, (_, i) => i + 1);
+}
+
   };
 
 const editvalue = async (id, attribute,type,columnvalue) => {
@@ -370,9 +371,22 @@ const editvalue = async (id, attribute,type,columnvalue) => {
 
  
 // Find the specific task
-const taskToEdit =  Store.column.find((col) =>
-  col.tasks.some((t) => t.id === id)
-);
+if (!selectedNode || selectedNode.level !== 2) return;
+
+let taskToEdit = null;
+
+// Search in selectedNode.ruleGroups
+selectedNode.ruleGroups.forEach((rg) => {
+  if (rg.type === "group") {
+    const foundInGroup = rg.rules.find((t) => t.id === id);
+    if (foundInGroup) taskToEdit = foundInGroup;
+  } else if (rg.type === "rule" && rg.id === id) {
+    taskToEdit = rg;
+  }
+});
+
+
+
 if (!taskToEdit) return;
 
 const row = {};
@@ -482,14 +496,30 @@ if (attribute === "SelectAttribute") {
   
 
    // Find the column that contains the clicked task
-const column = Store.column.find((col) =>
-  col.tasks.some((t) => t.id === id)
-);
-
-if (!column) return;
+if (!selectedNode || selectedNode.level !== 2) return;
 
 // 1️⃣ Find ONLY the task that was clicked
-const selectedTask = column.tasks.find((t) => t.id === id);
+let selectedTask = null;
+
+// Loop through ruleGroups of selectedNode
+selectedNode.ruleGroups.forEach((rg) => {
+  if (rg.type === "group") {
+    const taskInGroup = rg.rules.find((t) => t.id === id);
+    if (taskInGroup) selectedTask = taskInGroup;
+  } else if (rg.type === "rule" && rg.id === id) {
+    selectedTask = rg;
+  }
+});
+
+if (!selectedTask) return; // task not found
+
+// 2️⃣ Now you can do exactly what you were doing
+Object.keys(formValues).forEach((label) => {
+  const value = formValues[label];
+  if (value !== null && value !== undefined && value !== "")
+    selectedTask[label] = value;
+});
+
 
 if (!selectedTask) return;
 
@@ -639,50 +669,56 @@ flagSwitch?.addEventListener("change", () => {
   });
 
    if (!formValues) return;
+// 1️⃣ Find the parent (selectedNode) that contains this task
+if (!selectedNode || selectedNode.level !== 2) return;
 
- // 1️⃣ Find the column that contains this task id
-const column1 = Store.column.find((col) =>
-  col.tasks.some((t) => t.id === id)
-);
+// 2️⃣ Build new updated ruleGroups array
+const updatedRuleGroups = selectedNode.ruleGroups.map((rg) => {
+  // Rule inside a group
+  if (rg.type === "group") {
+    return {
+      ...rg,
+      rules: rg.rules.map((task) => {
+        if (task.id !== id) return task; // untouched task
 
-if (!column1) return;
+        // Safe clone and apply new values
+        const updatedTask = { ...task };
+        Object.keys(formValues).forEach((label) => {
+          const value = formValues[label];
+          if (value !== null && value !== undefined && value !== "")
+            updatedTask[label] = value;
+        });
+        return updatedTask;
+      }),
+    };
+  }
 
-// 2️⃣ Build new updatedColumns array
-const updatedColumns = Store.column.map((col) => {
-  const containsTask = col.tasks.some((t) => t.id === id);
-
-  // If this column does NOT contain the task → return as-is
-  if (!containsTask) return col;
-
-  // 3️⃣ Update ONLY the matched task inside this column
-  const updatedTasks = col.tasks.map((task) => {
-    if (task.id !== id) return task; // untouched task
-
-    // Safe clone
-    const updatedTask = { ...task };
-
-    // Apply only the fields sent from popup
+  // Single rule directly under sub-child
+  if (rg.type === "rule" && rg.id === id) {
+    const updatedTask = { ...rg };
     Object.keys(formValues).forEach((label) => {
       const value = formValues[label];
-
-      // ⛔ Value is empty? DO NOT CLEAR ORIGINAL VALUE
-      if (value === null || value === undefined || value === "") return;
-
-      // Set the new value
-      updatedTask[label] = value;
+      if (value !== null && value !== undefined && value !== "")
+        updatedTask[label] = value;
     });
-
     return updatedTask;
-  });
+  }
 
-  return {
-    ...col,
-    tasks: updatedTasks,
-  };
+  return rg;
 });
 
-// 4️⃣ Update Store.column (UI refresh)
-Store.column = updatedColumns;
+// 3️⃣ Update tree immutably
+const updateTree = (nodes) =>
+  nodes.map((n) => {
+    if (n.id === selectedNode.id) {
+      return { ...n, ruleGroups: updatedRuleGroups };
+    }
+    if (n.children?.length) return { ...n, children: updateTree(n.children) };
+    return n;
+  });
+
+// 4️⃣ Save updated tree in MobX
+Store.setTreedata(updateTree(Store.treedata));
 
 
 Store.selectedvalue = "" ;
@@ -692,156 +728,218 @@ Store.selectedvalue = "" ;
 
 
   
-  const handleDeleteRule = async (columnId, taskId) => {
-  const column = Store.column.find((col) => col.id === columnId);
-  if (!column) return;
+  const handleDeleteRule = async (groupId, ruleId) => {
+  if (!selectedNode || selectedNode.level !== 2) return;
 
-  const task = column.tasks.find((t) => t.id === taskId);
-  if (!task) return;
-
-  // 🔥 SweetAlert confirmation
   const result = await Swal.fire({
-    title: `<div style="color:#1e293b; font-weight:700; font-size:1.3rem;">Delete Rule</div>`,
-    html: `<div style="color:#475569; font-size:1rem;">Are you sure you want to delete <b>${task.ConditionId}</b>?</div>`,
+    title: "Delete Rule?",
+    text: "Are you sure you want to delete this rule?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#ef4444",
     cancelButtonColor: "#64748b",
-    confirmButtonText: "Yes, Delete it",
+    confirmButtonText: "Yes, delete it",
     cancelButtonText: "Cancel",
   });
 
-  if (result.isConfirmed) {
-    // 🧹 Update MobX columns
-    const updatedColumns = Store.column
-      .map((col) => {
-        if (col.id === columnId) {
-          const updatedTasks = col.tasks.filter((t) => t.id !== taskId);
+  if (!result.isConfirmed) return;
 
-          // ⚠️ Remove the entire column if task is empty
-          if (updatedTasks.length === 0) {
-            return null;
-          }
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return {
+          ...n,
+          ruleGroups: n.ruleGroups
+            .map((rg) => {
+              /* -------- RULE INSIDE GROUP -------- */
+              if (rg.type === "group" && rg.id === groupId) {
+                return {
+                  ...rg,
+                  rules: rg.rules.filter((r) => r.id !== ruleId),
+                };
+              }
 
-          return { ...col, tasks: updatedTasks };
-        }
-        return col;
-      })
-      .filter((col) => col !== null); // remove empty columns
+              /* -------- RULE DIRECTLY UNDER SUBCHILD -------- */
+              if (rg.type === "rule" && rg.id === ruleId) {
+                return null;
+              }
 
-    // 🔥 MobX replace
-    Store.column = updatedColumns;
-   alert(JSON.stringify(Store.column))
-    Swal.fire({
-      title: "Deleted!",
-      text: "The rule has been deleted successfully.",
-      icon: "success",
-      confirmButtonColor: "#2563eb",
+              return rg;
+            })
+            .filter(Boolean),
+        };
+      }
+
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
+
+      return n;
     });
-  }
+
+  Store.setTreedata(updateTree(Store.treedata));
+
+  Swal.fire({
+    title: "Deleted!",
+    text: "Rule has been deleted successfully.",
+    icon: "success",
+    confirmButtonColor: "#2563eb",
+  });
 };
 
 
 
-const deleteGroup = async (columnId) => {
-  // 🔔 Confirm before deleting
+
+const deleteGroup = async (groupId) => {
+  if (!selectedNode || selectedNode.level !== 2) return;
+
   const result = await Swal.fire({
-    title: `Delete Group "?`,
-    text: "This action will remove the entire group and its rules.",
+    title: "Delete Group?",
+    text: "This will remove the group and all its rules.",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#ef4444",
     cancelButtonColor: "#64748b",
-    confirmButtonText: "Yes, delete it!",
+    confirmButtonText: "Yes, delete it",
     cancelButtonText: "Cancel",
   });
 
-  if (result.isConfirmed) {
-    // 🗑️ Remove the column by filtering it out
-   Store.column = Store.column.filter((col) => col.id !== columnId);
+  if (!result.isConfirmed) return;
 
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return {
+          ...n,
+          ruleGroups: n.ruleGroups.filter(
+            (rg) => rg.id !== groupId
+          ),
+        };
+      }
 
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
 
-    // ✅ Success message
-    Swal.fire({
-      title: "Deleted!",
-      text: `Group  has been deleted.`,
-      icon: "success",
-      confirmButtonColor: "#2563eb",
+      return n;
     });
-  }
+
+  Store.setTreedata(updateTree(Store.treedata));
+
+  Swal.fire({
+    title: "Deleted!",
+    text: "Group has been deleted.",
+    icon: "success",
+    confirmButtonColor: "#2563eb",
+  });
 };
+
 
 
 
 
   // ➕ Add new rule inside specific group
   const addRuleInsideGroup = (groupId) => {
-    
-   Store.column = Store.column.map((col) => {
-  if (col.id === groupId && col.type === "group") {
-    const newRule = {
-      id: `task-${globalId}`,
-      ConditionSetId: `ConditionSetId${globalId}`,
-       RuleId: col.groupRuleId,
-      ConditionId: "Edit ConditionId",
-      SelectAttribute: "Edit SelectAttribute",
-      Condition: "Edit Condition",
-      SelectValue: "Edit Value",
-      Flag: "Edit Flag",
-      Actions: "Edit Actions",
-      // ruleorgroup: "rule",
-    };
+  if (!selectedNode || selectedNode.level !== 2) return;
 
-    setGlobalId((id) => id + 1);
-
-    return { ...col, tasks: [...col.tasks, newRule] };
-  }
-  return col;
-});
-
+  const newRule = {
+    id: `task-${globalId}`,
+    ConditionSetId: `ConditionSetId${globalId}`,
+    RuleId: `RuleId${ruleCounter}`,
+    ConditionId: "Edit ConditionId",
+    SelectAttribute: "Edit SelectAttribute",
+    Condition: "Edit Condition",
+    SelectValue: "Edit Value",
+    Flag: "Edit Flag",
+    Actions: "Edit Actions",
   };
+
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return {
+          ...n,
+          ruleGroups: n.ruleGroups.map((rg) => {
+            if (rg.id === groupId && rg.type === "group") {
+              return {
+                ...rg,
+                rules: [...(rg.rules || []), newRule],
+              };
+            }
+            return rg;
+          }),
+        };
+      }
+
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
+
+      return n;
+    });
+
+  Store.setTreedata(updateTree(Store.treedata));
+
+  setGlobalId((id) => id + 1);
+  setRuleCounter((n) => n + 1);
+};
+
 
   // 🧱 Drag handling
  const handleDragEnd = (event) => {
   const { active, over } = event;
   if (!over || active.id === over.id) return;
+  if (!selectedNode || selectedNode.level !== 2) return;
 
-console.log(active.id)
-   const activeId = String(active.id);
+  const activeId = String(active.id);
   const overId = String(over.id);
 
- 
-  // 🧠 Check what is being dragged
-  const isColumnDrag = activeId.startsWith("column-");
-  const isTaskDrag = activeId.startsWith("task-");
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        let ruleGroups = [...n.ruleGroups];
 
-  if (isColumnDrag) {
-    const oldIndex = Store.column.findIndex((c) => c.id === active.id);
-const newIndex = Store.column.findIndex((c) => c.id === over.id);
-alert(oldIndex)
-alert(newIndex)
-Store.column = arrayMove(Store.column, oldIndex, newIndex);
+        /* ---------------- MOVE RULE / GROUP ORDER ---------------- */
+        const activeIndex = ruleGroups.findIndex((i) => i.id === activeId);
+        const overIndex = ruleGroups.findIndex((i) => i.id === overId);
 
+        if (activeIndex !== -1 && overIndex !== -1) {
+          ruleGroups = arrayMove(ruleGroups, activeIndex, overIndex);
+          return { ...n, ruleGroups };
+        }
 
-    return;
-  }
+        /* ---------------- MOVE TASK INSIDE GROUP ---------------- */
+        ruleGroups = ruleGroups.map((rg) => {
+          if (rg.type !== "group") return rg;
 
-  if (isTaskDrag) {
-    // 🔧 Move rule inside a group only
-   Store.column = Store.column.map((col) => {
-  const activeIndex = col.tasks.findIndex((t) => t.id === active.id);
-  const overIndex = col.tasks.findIndex((t) => t.id === over.id);
+          const activeTaskIndex = rg.rules?.findIndex(
+            (t) => t.id === activeId
+          );
+          const overTaskIndex = rg.rules?.findIndex(
+            (t) => t.id === overId
+          );
 
-  if (activeIndex !== -1 && overIndex !== -1) {
-    const newTasks = arrayMove(col.tasks, activeIndex, overIndex);
-    return { ...col, tasks: newTasks };
-  }
+          if (activeTaskIndex !== -1 && overTaskIndex !== -1) {
+            return {
+              ...rg,
+              rules: arrayMove(rg.rules, activeTaskIndex, overTaskIndex),
+            };
+          }
 
-  return col;
-});
+          return rg;
+        });
 
-  }
+        return { ...n, ruleGroups };
+      }
+
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
+
+      return n;
+    });
+
+  Store.setTreedata(updateTree(Store.treedata));
 };
 
 const selectCollection = async (name) => {
@@ -869,65 +967,35 @@ const popupVisible = () => {
 }
 
   const toggleCollapse = (groupId) => {
-    Store.column= Store.column.map((col) =>
-  col.id === groupId ? { ...col, collapsed: !col.collapsed } : col
-);
- };
+  if (!selectedNode || selectedNode.level !== 2) return;
+
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return {
+          ...n,
+          ruleGroups: n.ruleGroups.map((rg) =>
+            rg.id === groupId
+              ? { ...rg, collapsed: !rg.collapsed }
+              : rg
+          ),
+        };
+      }
+
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
+
+      return n;
+    });
+
+  Store.setTreedata(updateTree(Store.treedata));
+};
+
 
     return (
         <div style={{ padding: "20px" ,width: "85%",background: "#f2f2f3",height : "100%",position : "relative"}}>
 
-       {/* <div
-        style={{
-         
-          display: "flex",
-          gap: 12,
-          width: "fit-content",
-          padding:"10px",
-          marginTop:"auto",
-          marginBottom:"auto",
-          alignItems: "center",
-          padding:"19px",
-          borderRadius: 8,
-        }}
-      >
-        <button
-          className="p-3 rounded-full"
-          title="Add / Select collection"
-          style={{ background: "#10b981", color: "white", border: "none" }}
-          onClick={Tableselect}
-        >
-          <FaPlus />
-        </button>
-
-        <button
-          className="px-3 py-2 rounded-md"
-          style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={() => Store.saveFile()}
-        >
-          Save
-        </button>
-
-        <button
-          className="px-3 py-2 rounded-md"
-          style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={() => Store.saveFileAs()}
-        >
-          Save As
-        </button>
-
-        <button
-          className="px-3 py-2 rounded-md"
-          style={{ background: "#2563eb", color: "white", border: "none" }}
-          onClick={() => Store.downloadLastExport()}
-        >
-          Download
-        </button>
-      
-        
-        
-      </div> */}
-      {/* Table header - only once */}
       <div
   style={{
     display: "grid",
@@ -1108,31 +1176,33 @@ const popupVisible = () => {
           }}
         >
           
-<SortableContext
- items={Store.column.map((c) => c.id)}               
-  strategy={verticalListSortingStrategy}        
->
-  {Store.column.map((col) => (
-    
-    <SortableContext
-      key={col.id}
-      items={col.tasks.map((t) => t.id)}
-      strategy={verticalListSortingStrategy}
-    >
-      <Columndata
+{selectedNode?.level === 2 && (
+  <SortableContext
+    items={(selectedNode.ruleGroups || []).map((c) => c.id)}
+    strategy={verticalListSortingStrategy}
+  >
+    {(selectedNode.ruleGroups || []).map((col) => (
+      <SortableContext
         key={col.id}
-        column={col}
-      
-        addRuleInsideGroup={addRuleInsideGroup}
-        editvalue={editvalue}
-        handleDeleteRule={handleDeleteRule}
-        handleAddGroup={handleAddGroup}
-        deleteGroup={deleteGroup}
-        toggleCollapse={toggleCollapse}
-      />
-    </SortableContext>
-  ))}
-</SortableContext>
+        items={(col.tasks || []).map((t) => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <Columndata
+          key={col.id}
+          column={col}
+          addRuleInsideGroup={addRuleInsideGroup}
+          editvalue={editvalue}
+          handleDeleteRule={handleDeleteRule}
+          handleAddGroup={handleAddGroup}
+          deleteGroup={deleteGroup}
+          toggleCollapse={toggleCollapse}
+          selectedNode={selectedNode}
+        />
+      </SortableContext>
+    ))}
+  </SortableContext>
+)}
+
 
 
         </div>

@@ -56,18 +56,18 @@ useEffect(() => {
 
 
   const handleSubmit = (value) => {
-        if (value === "rule") {
+
+    
+         if (value !== "rule") return;
+    if (!selectedNode || selectedNode.level !== 2) return;
           
-          const newCount = Store.column.length+1
-          alert(newCount)
-       Store.column = [
-  ...Store.column,
-  {
+         
+          const newRule = {
     id: `column-${globalId}`,
     type: "rule",
     name: `Rule ${globalId}`,
-    count : newCount,
-    treeId: Store.parentId,
+
+    treeId: selectedNode ? selectedNode.id : null,
     tasks: [
       {
         id: `task-${globalId}`,
@@ -83,13 +83,13 @@ useEffect(() => {
         // ruleorgroup: "rule",
       },
     ],
-  },
-];
+  };
 
+          addRuleOrGroupToSubChild(newRule);
           setGlobalId((id) => id + 1);
           setRuleCounter((n) => n + 1);
 
-         } 
+         
 
          setPopupOpen(false);
       };
@@ -110,21 +110,31 @@ useEffect(() => {
           children: [],
           isOpen: true,
           level: selectedNode.level + 1,
+          ruleGroups: selectedNode.level + 1 === 2 ? [] : undefined,
         };
     
-        const addChild = (nodes) =>
-          nodes.map((n) => {
-            if (n.id === selectedNode.id) {
-              return { ...n, children: [...n.children, newChild] };
-            }
-            return { ...n, children: addChild(n.children) };
-          });
+        const updateTree = (nodes) =>
+      nodes.map((n) => {
+        if (n.id === selectedNode.id) {
+          return { ...n, children: [...n.children, newChild] };
+        }
+        if (n.children?.length) {
+          return { ...n, children: updateTree(n.children) };
+        }
+        return n;
+      });
     
-       Store.setTreedata(addChild(Store.treedata));
+       Store.setTreedata(updateTree(Store.treedata));
       Store.isSidebarVisible1 = false;
       
         setPopupOpen(false);
       };
+
+
+
+
+
+
 
       const selectvalue = (name) => {
   
@@ -147,10 +157,30 @@ settreecount((treecount) => treecount + 1)
     Store.isSidebarVisible1 = false;
   };
 
+  const addRuleOrGroupToSubChild = (item) => {
+    const updateTree = (nodes) =>
+      nodes.map((n) => {
+        if (n.id === selectedNode.id) {
+          return {
+            ...n,
+            ruleGroups: [...(n.ruleGroups || []), item],
+          };
+        }
+        if (n.children?.length) {
+          return { ...n, children: updateTree(n.children) };
+        }
+        return n;
+      });
+
+    Store.setTreedata(updateTree(Store.treedata));
+  };
+
   
     
 
   const handleAddGroup = async () => {
+
+     if (!selectedNode || selectedNode.level !== 2) return;
       // 🧠 Ask user for the group name
       const { value: groupName } = await Swal.fire({
         title: `<div style="color:#1e293b; font-weight:700; font-size:1.3rem;">Create New Group</div>`,
@@ -173,17 +203,16 @@ settreecount((treecount) => treecount + 1)
       });
     
       if (groupName) {
-        // 🧩 Create a new column with that group name
-        const newCount = Store.column.length+1
-        alert(newCount)
+       
+       
         const newColumn = {
   id: `column-${globalId}`,
   type: "group",
   name: groupName.trim(),
   collopsed: false,
   groupRuleId: `RuleId${ruleCounter}`,
-  count : newCount,
-  treeId: Store.parentId,
+
+  treeId: selectedNode ? selectedNode.id : null,
   tasks: [
     {
       id: `task-${globalId}`,
@@ -199,8 +228,7 @@ settreecount((treecount) => treecount + 1)
   ],
 };
 
-// MobX update
-Store.column= [...Store.column, newColumn];
+        addRuleOrGroupToSubChild(newColumn);
 
         setGlobalId((id) => id + 1);
         setRuleCounter((n) => n + 1);
@@ -340,7 +368,7 @@ Store.column= [...Store.column, newColumn];
         </div>
       )}
         <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId}  globalId={globalId}  setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
-      <Rules  globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} />
+      <Rules  globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} selectedNode={selectedNode} ruleCounter={ruleCounter} setRuleCounter={setRuleCounter}/>
       
     </div>
 

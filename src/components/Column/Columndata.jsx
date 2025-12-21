@@ -14,7 +14,7 @@ import { useState } from "react";
 import { MdEdit } from "react-icons/md";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
-export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse ,editvalue}) => {
+export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse ,editvalue,selectedNode}) => {
 
 const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -70,7 +70,12 @@ const popupSections = {
     
       
       
-      return Array.from({ length: Store.column.length }, (_, i) => i + 1);
+      if (!selectedNode) return [];
+
+// If you want the number of ruleGroups in selectedNode
+const count = selectedNode.ruleGroups?.length || 0;
+return Array.from({ length: count }, (_, i) => i + 1);
+
     
   };
 
@@ -85,9 +90,15 @@ const popupSections = {
 
  
 // Find column that contains the clicked task
-const column = Store.column.find(col =>
-  col.id === id
-);
+if (!selectedNode) return;
+
+// Find the column (rule or group) inside selectedNode.ruleGroups
+const column = selectedNode.ruleGroups.find((rg) => rg.id === id);
+
+if (!column) return;
+
+// Now you can safely update it
+
 
 if (!column) return;
 
@@ -228,15 +239,32 @@ if (conditionList) {
    if (!formValues) return;
 
     if (!formValues) return;
+if (!selectedNode) return;
 
-const index = Store.column.findIndex(c => c.id === id);
+// 1️⃣ Update the rule or group inside selectedNode.ruleGroups
+const updatedRuleGroups = selectedNode.ruleGroups.map((rg) => {
+  if (rg.id === id) {
+    return {
+      ...rg,
+      condition: formValues.ConditionId, // ✅ Save selected dropdown value
+    };
+  }
+  return rg;
+});
 
-if (index !== -1) {
-  Store.column[index] = {
-    ...Store.column[index],
-    condition: formValues.ConditionId   // ✅ Save selected dropdown value
-  };
-}
+// 2️⃣ Update the tree immutably
+const updateTree = (nodes) =>
+  nodes.map((n) => {
+    if (n.id === selectedNode.id) {
+      return { ...n, ruleGroups: updatedRuleGroups };
+    }
+    if (n.children?.length) return { ...n, children: updateTree(n.children) };
+    return n;
+  });
+
+// 3️⃣ Save updated tree in MobX
+Store.setTreedata(updateTree(Store.treedata));
+
 
 };
 
@@ -262,11 +290,24 @@ if (index !== -1) {
     },
   });
 
-  // ✅ If user entered a valid name, update the column in state
-  if (Name) {
-    Store.column = Store.column.map(col =>
-  col.id === columnId ? { ...col, name: Name.trim() } : col
-);
+ 
+  if (Name && selectedNode) {
+     const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return {
+          ...n,
+          ruleGroups: n.ruleGroups.map((rg) =>
+            rg.id === columnId ? { ...rg, name: Name.trim() } : rg
+          ),
+        };
+      }
+
+      if (n.children?.length) return { ...n, children: updateTree(n.children) };
+      return n;
+    });
+
+  Store.setTreedata(updateTree(Store.treedata));
 
     // ✅ Success message
     Swal.fire({
@@ -338,39 +379,6 @@ if (index !== -1) {
     {column.condition ? column.condition.replace(/\D/g, "") : "Add Condition"}
 
   </a>
-
-  {/* dropdown
-  {openDropdownId === column.id && (
-    <select
-      style={{
-        position: "absolute",
-        top: "25px",
-        left: "0px",
-        width: "150px",
-        padding: "6px",
-        borderRadius: "6px",
-        border: "1px solid #ccc",
-        background: "white",
-        zIndex: 12,
-      }}
-      onChange={(e) => handleSelectCondition(column.id, e.target.value)}
-      onPointerDown={(e) => e.stopPropagation()}
-    >
-      <option value="">Select Column</option>
-
-      {Store.column.map((col) => {
-  const ruleId = col.tasks?.[0]?.RuleId;          // e.g. id1, id2, Rule3
-  const onlyNumber = ruleId?.replace(/\D/g, "");  // result: 1, 2, 3
-
-  return (
-    <option key={col.id} value={ruleId}>
-      {onlyNumber}
-    </option>
-  );
-})}
-
-    </select>
-  )} */}
 
 </div>
 
