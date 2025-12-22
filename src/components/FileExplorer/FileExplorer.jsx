@@ -15,22 +15,6 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
     console.log("treedata updated:", Store.treedata);
   }, [Store.treedata]);  
 
-  //  const [open, setOpen] = useState(false);
-  // const [showDataPopup, setShowDataPopup] = useState(false);
-
-  // const [rows, setRows] = useState([]);
-
-  // const addRow = () => {
-  //   setRows([...rows, { label: "", type: "" }]);
-  // };
-
-  // const updateRow = (index, key, value) => {
-  //   const newRows = [...rows];
-  //   newRows[index][key] = value;
-  //   setRows(newRows);
-  // };
-
-
 
   const getTopParentId = (nodes, targetId) => {
   for (let parent of nodes) {
@@ -75,11 +59,9 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
         }
         Store.pop = node1.name
 
-        Store.treedata.forEach((data) => {
-
-        })
         Store.parentId = topParentId
         setSelectedNode(node1);
+        alert("Clicked node: " + node1.name);
         setPopupOpen(true);
       };
     

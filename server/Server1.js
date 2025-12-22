@@ -67,6 +67,14 @@ app.get("/columns", async (req, res) => {
 
 });
 
+app.get("/columns/:collection", async (req, res) => {
+  const { collection } = req.params;
+  const doc = await database.collection(collection).findOne({});
+  const keys = doc ? Object.keys(doc).filter(k => k !== "_id") : [];
+  res.json(keys);
+});
+
+
 const employeeSchema = new mongoose.Schema({
   EEID : String,
   "Full Name" : String,

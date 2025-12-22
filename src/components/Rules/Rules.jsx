@@ -13,6 +13,7 @@ import { FaPlus, FaMinus, FaExpandArrowsAlt } from "react-icons/fa";
 import { useEffect } from "react";
 import Store from "../../Store";
 import { IoClose } from "react-icons/io5";
+import { toJS } from "mobx";
 
 export const Rules = observer(({globalId,setGlobalId,handleAddGroup,selectedNode,ruleCounter,setRuleCounter}) =>{
  const tablerow = [
@@ -27,6 +28,69 @@ export const Rules = observer(({globalId,setGlobalId,handleAddGroup,selectedNode
     "Actions",
     
   ];
+useEffect(() => {
+  if (!selectedNode) return;
+
+  let rootParent = null;
+
+  // ✅ CASE 1: selected node itself is root
+  if (selectedNode.level === 0) {
+    rootParent = selectedNode;
+  } 
+  // ✅ CASE 2: selected node is child / sub-child
+  else {
+    const findRoot = (nodes) => {
+      for (const node of nodes) {
+        if (node.children?.some(c => c.id === selectedNode.id)) {
+          return node;
+        }
+        const found = node.children && findRoot(node.children);
+        if (found) return found;
+      }
+      return null;
+    };
+
+    rootParent = findRoot(Store.treedata);
+  }
+
+  if (!rootParent?.name) return;
+
+  const collectionName = rootParent.name.toLowerCase(); // employee | patient | ecommerce
+
+  fetch(`http://localhost:4000/columns/${collectionName}`)
+    .then(res => res.json())
+    .then(keys => {
+      Store.columns = keys; // ✅ already array
+    })
+    .catch(err => console.error(err));
+
+}, [selectedNode]);
+
+//  useEffect(() => {
+//   if (!selectedNode) return;
+
+//   // 🔍 Find top-level parent (employee / patient / ecommerce)
+//   const rootParent = Store.treedata.find(root =>
+//     root.children?.some(child =>
+//       JSON.stringify(child).includes(selectedNode.id)
+//     )
+//   );
+
+//   if (!rootParent?.name) return;
+
+//   const collectionName = rootParent.name.toLowerCase(); // employee | patient | ecommerce
+
+//   fetch(`http://localhost:4000/columns/${collectionName}`)
+//     .then(res => res.json())
+//     .then(keys => {
+//       // ✅ Backend already returns keys array
+//       Store.columns = keys;
+//     })
+//     .catch(err => console.error(err));
+
+// }, [selectedNode]);
+
+
 
 
   useEffect(() => {
@@ -375,15 +439,22 @@ if (!selectedNode || selectedNode.level !== 2) return;
 
 let taskToEdit = null;
 
-// Search in selectedNode.ruleGroups
-selectedNode.ruleGroups.forEach((rg) => {
-  if (rg.type === "group") {
-    const foundInGroup = rg.rules.find((t) => t.id === id);
+
+
+selectedNode.ruleGroups?.forEach((rg) => {
+  // ✅ GROUP → search inside tasks
+  
+    const foundInGroup = rg.tasks?.find((t) => t.id === id);
     if (foundInGroup) taskToEdit = foundInGroup;
-  } else if (rg.type === "rule" && rg.id === id) {
-    taskToEdit = rg;
-  }
+  
+
+  // ✅ DIRECT RULE
+  // if (rg.type === "rule" && rg.id === id) {
+  //   const foundInGroup = rg.tasks?.find((t) => t.id === id);
+  //   if (foundInGroup) taskToEdit = foundInGroup;
+  // }
 });
+
 
 
 
@@ -501,24 +572,29 @@ if (!selectedNode || selectedNode.level !== 2) return;
 // 1️⃣ Find ONLY the task that was clicked
 let selectedTask = null;
 
-// Loop through ruleGroups of selectedNode
-selectedNode.ruleGroups.forEach((rg) => {
+(selectedNode.ruleGroups || []).forEach((rg) => {
+  // ✅ GROUP → find rule inside tasks[]
   if (rg.type === "group") {
-    const taskInGroup = rg.rules.find((t) => t.id === id);
+    const taskInGroup = (rg.tasks || []).find((t) => t.id === id);
     if (taskInGroup) selectedTask = taskInGroup;
-  } else if (rg.type === "rule" && rg.id === id) {
-    selectedTask = rg;
+  }
+
+  // ✅ DIRECT RULE → tasks[0]
+  if (rg.type === "rule") {
+    const task = (rg.tasks || []).find((t) => t.id === id);
+    if (task) selectedTask = task;
   }
 });
 
+
 if (!selectedTask) return; // task not found
 
-// 2️⃣ Now you can do exactly what you were doing
-Object.keys(formValues).forEach((label) => {
-  const value = formValues[label];
-  if (value !== null && value !== undefined && value !== "")
-    selectedTask[label] = value;
-});
+// // 2️⃣ Now you can do exactly what you were doing
+// Object.keys(formValues).forEach((label) => {
+//   const value = formValues[label];
+//   if (value !== null && value !== undefined && value !== "")
+//     selectedTask[label] = value;
+// });
 
 
 if (!selectedTask) return;
@@ -673,39 +749,50 @@ flagSwitch?.addEventListener("change", () => {
 if (!selectedNode || selectedNode.level !== 2) return;
 
 // 2️⃣ Build new updated ruleGroups array
-const updatedRuleGroups = selectedNode.ruleGroups.map((rg) => {
-  // Rule inside a group
+const updatedRuleGroups = (selectedNode.ruleGroups || []).map((rg) => {
+  // ✅ GROUP → update rule inside tasks[]
   if (rg.type === "group") {
     return {
       ...rg,
-      rules: rg.rules.map((task) => {
-        if (task.id !== id) return task; // untouched task
+      tasks: (rg.tasks || []).map((task) => {
+        if (task.id !== id) return task;
 
-        // Safe clone and apply new values
         const updatedTask = { ...task };
         Object.keys(formValues).forEach((label) => {
           const value = formValues[label];
-          if (value !== null && value !== undefined && value !== "")
+          if (value !== null && value !== undefined && value !== "") {
             updatedTask[label] = value;
+          }
         });
+
         return updatedTask;
       }),
     };
   }
 
-  // Single rule directly under sub-child
-  if (rg.type === "rule" && rg.id === id) {
-    const updatedTask = { ...rg };
-    Object.keys(formValues).forEach((label) => {
-      const value = formValues[label];
-      if (value !== null && value !== undefined && value !== "")
-        updatedTask[label] = value;
-    });
-    return updatedTask;
+  // ✅ DIRECT RULE → single task inside tasks[0]
+  if (rg.type === "rule") {
+    return {
+      ...rg,
+      tasks: (rg.tasks || []).map((task) => {
+        if (task.id !== id) return task;
+
+        const updatedTask = { ...task };
+        Object.keys(formValues).forEach((label) => {
+          const value = formValues[label];
+          if (value !== null && value !== undefined && value !== "") {
+            updatedTask[label] = value;
+          }
+        });
+
+        return updatedTask;
+      }),
+    };
   }
 
   return rg;
 });
+
 
 // 3️⃣ Update tree immutably
 const updateTree = (nodes) =>
@@ -856,14 +943,16 @@ const deleteGroup = async (groupId) => {
 
   const updateTree = (nodes) =>
     nodes.map((n) => {
+      // 🎯 Match selected sub-child node
       if (n.id === selectedNode.id) {
         return {
           ...n,
           ruleGroups: n.ruleGroups.map((rg) => {
+            // 🎯 Match group
             if (rg.id === groupId && rg.type === "group") {
               return {
                 ...rg,
-                rules: [...(rg.rules || []), newRule],
+                tasks: [...(rg.tasks || []), newRule], // ✅ ADD HERE
               };
             }
             return rg;
@@ -871,6 +960,7 @@ const deleteGroup = async (groupId) => {
         };
       }
 
+      // 🔁 Recurse children
       if (n.children?.length) {
         return { ...n, children: updateTree(n.children) };
       }
@@ -882,7 +972,13 @@ const deleteGroup = async (groupId) => {
 
   setGlobalId((id) => id + 1);
   setRuleCounter((n) => n + 1);
+
+  console.log(
+    "Updated Tree:",
+    JSON.stringify(Store.treedata, null, 2)
+  );
 };
+
 
 
   // 🧱 Drag handling

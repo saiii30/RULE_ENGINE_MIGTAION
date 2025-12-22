@@ -31,9 +31,46 @@ const FlowDiagram = observer(() => {
 
 
 
-   useEffect(() => {
-          fetch("http://localhost:4000/columns").then((res) => res.json()).then((result) => Store.columns = result).catch((err)=> console.error(err));          
-      }, []);
+  useEffect(() => {
+  if (!selectedNode) return;
+
+  let rootParent = null;
+
+  // ✅ CASE 1: selected node itself is root
+  if (selectedNode.level === 0) {
+    rootParent = selectedNode;
+  } 
+  // ✅ CASE 2: selected node is child / sub-child
+  else {
+    const findRoot = (nodes) => {
+      for (const node of nodes) {
+        if (node.children?.some(c => c.id === selectedNode.id)) {
+          return node;
+        }
+        const found = node.children && findRoot(node.children);
+        if (found) return found;
+      }
+      return null;
+    };
+
+    rootParent = findRoot(Store.treedata);
+  }
+
+  if (!rootParent?.name) return;
+
+  const collectionName = rootParent.name.toLowerCase(); // employee | patient | ecommerce
+
+  fetch(`http://localhost:4000/columns/${collectionName}`)
+    .then(res => res.json())
+    .then(keys => {
+      Store.columns = keys; // ✅ already array
+    })
+    .catch(err => console.error(err));
+
+}, [selectedNode]);
+
+
+
 
 
 
@@ -174,6 +211,12 @@ settreecount((treecount) => treecount + 1)
       });
 
     Store.setTreedata(updateTree(Store.treedata));
+    console.log(
+  "Updated Tree Data:",
+  JSON.parse(JSON.stringify(Store.treedata))
+);
+
+
   };
 
   
