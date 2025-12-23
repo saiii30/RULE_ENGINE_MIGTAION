@@ -411,7 +411,7 @@ const findNodeById = (nodes, id) => {
 <button
   className="icon-btn delete-icon"
   onPointerDown={(e) => e.stopPropagation()}
-  onClick={() => deleteGroup(column.id)}
+  onClick={() => deleteGroup(column.id,"group")}
 >
   <MdDelete size={20} />
 </button>
@@ -456,6 +456,7 @@ const findNodeById = (nodes, id) => {
                   columnId={column.id}
                   editvalue={editvalue}
                   handleDeleteRule={handleDeleteRule}
+                  deleteGroup={deleteGroup}
                   sortableProps={{ setNodeRef, attributes, listeners, transform, transition }}
                 />
               ))}

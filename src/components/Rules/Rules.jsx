@@ -765,8 +765,10 @@ if (!formValues) return;
 
 
   
-  const handleDeleteRule = async (groupId, ruleId) => {
+ const handleDeleteRule = async (groupId, ruleId) => {
   if (!selectedNode || selectedNode.level !== 2) return;
+
+  alert("Deleting rule: " + ruleId + " from group: " + groupId);
 
   const result = await Swal.fire({
     title: "Delete Rule?",
@@ -781,40 +783,54 @@ if (!formValues) return;
 
   if (!result.isConfirmed) return;
 
-  const updateTree = (nodes) =>
-    nodes.map((n) => {
-      if (n.id === selectedNode.id) {
-        return {
-          ...n,
-          ruleGroups: n.ruleGroups
-            .map((rg) => {
-              /* -------- RULE INSIDE GROUP -------- */
-              if (rg.type === "group" && rg.id === groupId) {
-                return {
-                  ...rg,
-                  rules: rg.rules.filter((r) => r.id !== ruleId),
-                };
-              }
+  let updatedSelectedNode = null;
 
-              /* -------- RULE DIRECTLY UNDER SUBCHILD -------- */
-              if (rg.type === "rule" && rg.id === ruleId) {
-                return null;
-              }
+  const deleteRuleFromTree = (nodes) => {
+    return nodes
+      .map((n) => {
+        const ruleGroups = (n.ruleGroups || [])
+          .map((rg) => {
+            // ✅ Delete task inside the specified group
+            if (rg.type === "group" && rg.id === groupId) {
+              return {
+                ...rg,
+                tasks: rg.tasks?.filter((t) => t.id !== ruleId) || [],
+              };
+            }
 
-              return rg;
-            })
-            .filter(Boolean),
-        };
-      }
+            // ✅ Delete top-level rule (column) regardless of groupId
+            if (rg.type === "rule" && rg.id === ruleId) {
+              return {
+                
+                tasks: rg.tasks?.filter((t) => t.id !== ruleId) || [],
+              };
+            }
 
-      if (n.children?.length) {
-        return { ...n, children: updateTree(n.children) };
-      }
+            return rg;
+          })
+          .filter(Boolean);
 
-      return n;
-    });
+        // Recursively handle children
+        const children = n.children ? deleteRuleFromTree(n.children) : [];
 
-  Store.setTreedata(updateTree(Store.treedata));
+        const updatedNode = { ...n, ruleGroups, children };
+
+        if (n.id === selectedNode.id) updatedSelectedNode = updatedNode;
+
+        return updatedNode;
+      })
+      .filter(Boolean);
+  };
+
+  const newTree = deleteRuleFromTree(Store.treedata);
+  Store.setTreedata(newTree);
+
+  // Clear selectedNode if deleted
+  if (selectedNode?.id === ruleId) {
+    setSelectedNode(null);
+  } else if (updatedSelectedNode) {
+    setSelectedNode(updatedSelectedNode);
+  }
 
   Swal.fire({
     title: "Deleted!",
@@ -827,11 +843,11 @@ if (!formValues) return;
 
 
 
-const deleteGroup = async (groupId) => {
+const deleteGroup = async (groupId, type) => {
   if (!selectedNode || selectedNode.level !== 2) return;
 
   const result = await Swal.fire({
-    title: "Delete Group?",
+    title: `Delete ${type === "group" ? "Group" : "Rule"}?`,
     text: "This will remove the group and all its rules.",
     icon: "warning",
     showCancelButton: true,
@@ -958,63 +974,45 @@ const findNodeById = (nodes, id) => {
 
 
 
-
-  // 🧱 Drag handling
- const handleDragEnd = (event) => {
-  const { active, over } = event;
+const handleDragEnd = ({ active, over }) => {
   if (!over || active.id === over.id) return;
-  if (!selectedNode || selectedNode.level !== 2) return;
 
   const activeId = String(active.id);
   const overId = String(over.id);
 
-  const updateTree = (nodes) =>
-    nodes.map((n) => {
-      if (n.id === selectedNode.id) {
-        let ruleGroups = [...n.ruleGroups];
+  const moveNode = (node) => {
+    if (!node.ruleGroups?.length) {
+      node.children?.forEach(moveNode);
+      return;
+    }
 
-        /* ---------------- MOVE RULE / GROUP ORDER ---------------- */
-        const activeIndex = ruleGroups.findIndex((i) => i.id === activeId);
-        const overIndex = ruleGroups.findIndex((i) => i.id === overId);
+    // Move column/group
+    const activeColIndex = node.ruleGroups.findIndex(c => c.id === activeId);
+    const overColIndex = node.ruleGroups.findIndex(c => c.id === overId);
+    if (activeColIndex !== -1 && overColIndex !== -1) {
+      node.ruleGroups.splice(overColIndex, 0, node.ruleGroups.splice(activeColIndex, 1)[0]);
+      return;
+    }
 
-        if (activeIndex !== -1 && overIndex !== -1) {
-          ruleGroups = arrayMove(ruleGroups, activeIndex, overIndex);
-          return { ...n, ruleGroups };
-        }
-
-        /* ---------------- MOVE TASK INSIDE GROUP ---------------- */
-        ruleGroups = ruleGroups.map((rg) => {
-          if (rg.type !== "group") return rg;
-
-          const activeTaskIndex = rg.rules?.findIndex(
-            (t) => t.id === activeId
-          );
-          const overTaskIndex = rg.rules?.findIndex(
-            (t) => t.id === overId
-          );
-
-          if (activeTaskIndex !== -1 && overTaskIndex !== -1) {
-            return {
-              ...rg,
-              rules: arrayMove(rg.rules, activeTaskIndex, overTaskIndex),
-            };
-          }
-
-          return rg;
-        });
-
-        return { ...n, ruleGroups };
+    // Move task inside same group
+    node.ruleGroups.forEach(rg => {
+      if (!rg.tasks?.length) return;
+      const activeTaskIndex = rg.tasks.findIndex(t => t.id === activeId);
+      const overTaskIndex = rg.tasks.findIndex(t => t.id === overId);
+      if (activeTaskIndex !== -1 && overTaskIndex !== -1) {
+        rg.tasks.splice(overTaskIndex, 0, rg.tasks.splice(activeTaskIndex, 1)[0]);
       }
-
-      if (n.children?.length) {
-        return { ...n, children: updateTree(n.children) };
-      }
-
-      return n;
     });
 
-  Store.setTreedata(updateTree(Store.treedata));
+    node.children?.forEach(moveNode);
+  };
+
+  Store.treedata.forEach(moveNode);
+
+  // Optional: refresh selectedNode to force UI update
+  setSelectedNode(findNodeById(Store.treedata, selectedNode.id));
 };
+
 
 const selectCollection = async (name) => {
 
@@ -1284,6 +1282,7 @@ const popupVisible = () => {
           toggleCollapse={toggleCollapse}
           selectedNode={selectedNode}
           setSelectedNode={setSelectedNode}
+          
         />
       </SortableContext>
     ))}

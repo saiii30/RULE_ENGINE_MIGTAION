@@ -24,6 +24,8 @@ export const Task = observer(({
   columnId,
   handleDeleteRule,
   sortableProps,
+  deleteGroup
+  
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -106,10 +108,21 @@ const fetchDropdownValues = async (rowIndex) => {
       <a style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }} onClick={() => Store.setShowDataPopup(true)}>{Actions}</a>
 
       <div className="actions">
-        <button style={{height: "30px"}} onPointerDown={(e) => e.stopPropagation()} onClick={() => handleDeleteRule(columnId,id)}>
-          <MdDelete/>
-        </button>
-      </div>
+  <button
+    style={{ height: "30px" }}
+    onPointerDown={(e) => e.stopPropagation()}
+    onClick={() => {
+      if (column === "group") {
+       handleDeleteRule(columnId,id)
+      } else {
+        deleteGroup(columnId,"rule"); // delete rule
+      }
+    }}
+  >
+    <MdDelete />
+  </button>
+</div>
+
 
        {Store.showDataPopup && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
