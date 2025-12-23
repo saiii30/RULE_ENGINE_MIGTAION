@@ -91,6 +91,106 @@ const employeeSchema = new mongoose.Schema({
 
 });
 
+const ecommerceSchema = new mongoose.Schema({
+  id : Number,
+  first_name : String,
+  last_name : String,
+  email : String,
+  gender : String,
+  Bank_name : String,
+  Order_date : String,
+  Product_name : String,
+  Product_price : Number,
+  Department : String,
+  Credit_card_type : String,
+  Credit_card : Number,
+  Stock_name : String,
+
+});
+
+const patientSchema = new mongoose.Schema({
+  patient_id : Number,
+  first_name : String,
+  last_name : String,
+  age : Number,
+  gender : String,
+  email : String,
+  phone_number : String,
+  address : String,
+  city : String,
+  country :  String,
+  blood_type : String,
+  allergies : String,
+  insurance_provider : String,
+  emergebcy_contact_name : String,
+
+});
+
+app.get("/values/:collection/:field", async (req, res) => {
+  try {
+    const { collection, field } = req.params;
+
+    const decodedField = decodeURIComponent(field);
+    const decodedCollection = decodeURIComponent(collection).toLowerCase();
+
+    console.log("👉 Collection:", decodedCollection);
+    console.log("👉 Field:", decodedField);
+
+    // ✅ Map allowed collections (SECURITY)
+    const collectionMap = {
+      employee: {
+        modelName: "employee",
+        schema: employeeSchema,
+        collectionName: "employee",
+      },
+      ecommerce: {
+        modelName: "ecommerce",
+        schema: ecommerceSchema,
+        collectionName: "ecommerce",
+      },
+      patient: {
+        modelName: "patient",
+        schema: patientSchema,
+        collectionName: "patient",
+      },
+    };
+
+    const config = collectionMap[decodedCollection];
+
+    if (!config) {
+      return res.status(400).json({ message: "Invalid collection name" });
+    }
+
+    // ✅ Dynamic model
+    const Model =
+      database.models[config.modelName] ||
+      database.model(
+        config.modelName,
+        config.schema,
+        config.collectionName
+      );
+
+    // ✅ Fetch only requested field
+    const docs = await Model.find({}, { [decodedField]: 1, _id: 0 });
+
+    // ✅ Extract + clean values
+    const values = docs
+      .map((doc) => doc[decodedField])
+      .filter((v) => v !== null && v !== undefined);
+
+    // ✅ Remove duplicates
+    const uniqueValues = [...new Set(values)];
+
+    console.log("👉 Sample values:", uniqueValues.slice(0, 5));
+
+    res.json(uniqueValues);
+  } catch (error) {
+    console.error("❌ Error fetching values:", error);
+    res.status(500).json({ message: "Error fetching values" });
+  }
+});
+
+
 
 app.get("/values/:field", async (req, res) => {
   try {

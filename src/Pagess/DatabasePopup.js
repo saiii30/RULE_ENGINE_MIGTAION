@@ -14,7 +14,7 @@ const DatabasePopup = ({ onClose }) => {
     e.preventDefault();
 
     if (!form.dbName || !form.dbId) {
-      alert("Please fill all fields!");
+    
       return;
     }
 

@@ -186,7 +186,7 @@ const handlePopupSelect = (label) => {
         };
         Store.setTreedata([...Store.treedata, newParent]);
 Store.isSidebarVisible1 = false;
-alert(`tree${treecount}`)
+
 settreecount((treecount) => treecount + 1)
 
   };
@@ -196,28 +196,43 @@ settreecount((treecount) => treecount + 1)
   };
 
   const addRuleOrGroupToSubChild = (item) => {
-    const updateTree = (nodes) =>
-      nodes.map((n) => {
-        if (n.id === selectedNode.id) {
-          return {
-            ...n,
-            ruleGroups: [...(n.ruleGroups || []), item],
-          };
-        }
-        if (n.children?.length) {
-          return { ...n, children: updateTree(n.children) };
-        }
-        return n;
-      });
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return {
+          ...n,
+          ruleGroups: [...(n.ruleGroups || []), item],
+        };
+      }
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
+      return n;
+    });
 
-    Store.setTreedata(updateTree(Store.treedata));
-    console.log(
-  "Updated Tree Data:",
-  JSON.parse(JSON.stringify(Store.treedata))
-);
+  const newTree = updateTree(Store.treedata);
+
+  // 1️⃣ Update MobX tree
+  Store.setTreedata(newTree);
+
+  // 2️⃣ IMPORTANT: refresh selectedNode reference
+  const refreshedNode = findNodeById(newTree, selectedNode.id);
+  setSelectedNode(refreshedNode); // ✅ THIS FIXES UI LAG
+};
+
+const findNodeById = (nodes, id) => {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children?.length) {
+      const found = findNodeById(n.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+};
 
 
-  };
+
 
   
     
@@ -412,7 +427,7 @@ settreecount((treecount) => treecount + 1)
         </div>
       )}
         <FileExplorer popupOpen={popupOpen} selectedNode={selectedNode} setPopupOpen={setPopupOpen}  setSelectedNode={setSelectedNode} setHoverId={setHoverId}  globalId={globalId}  setGlobalId={setGlobalId} hoverId ={hoverId} handleAddGroup={handleAddGroup}/>
-      <Rules  globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} selectedNode={selectedNode} ruleCounter={ruleCounter} setRuleCounter={setRuleCounter}/>
+      <Rules  globalId={globalId} setGlobalId={setGlobalId} handleAddGroup={handleAddGroup} selectedNode={selectedNode} ruleCounter={ruleCounter} setRuleCounter={setRuleCounter} setSelectedNode={setSelectedNode}/>
       
     </div>
 

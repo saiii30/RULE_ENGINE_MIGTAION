@@ -61,7 +61,7 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
 
         Store.parentId = topParentId
         setSelectedNode(node1);
-        alert("Clicked node: " + node1.name);
+       
         setPopupOpen(true);
       };
     
@@ -177,7 +177,7 @@ export const FileExplorer = observer(({selectedNode,setPopupOpen,setSelectedNode
               </div>
             )}
             </div>
-            {/* Children */}
+            
             {node.isOpen && renderTree(node.children, level + 1)}
           </div>
         ));

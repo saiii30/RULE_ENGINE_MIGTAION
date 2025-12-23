@@ -29,7 +29,7 @@ const Home = observer(() => {
 
   //   const token = localStorage.getItem('token')
   //   if (!token) {
-  //     alert('Please log in to restore your flow')
+ 
   //     return
   //   }
 

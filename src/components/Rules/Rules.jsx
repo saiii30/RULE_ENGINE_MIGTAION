@@ -14,8 +14,11 @@ import { useEffect } from "react";
 import Store from "../../Store";
 import { IoClose } from "react-icons/io5";
 import { toJS } from "mobx";
+import { useState } from "react";
 
-export const Rules = observer(({globalId,setGlobalId,handleAddGroup,selectedNode,ruleCounter,setRuleCounter}) =>{
+export const Rules = observer(({globalId,setGlobalId,handleAddGroup,selectedNode,ruleCounter,setRuleCounter,setSelectedNode}) =>{
+
+  const[value,setvalue] = useState(false)
  const tablerow = [
     
     "ConditionSetId",
@@ -28,96 +31,6 @@ export const Rules = observer(({globalId,setGlobalId,handleAddGroup,selectedNode
     "Actions",
     
   ];
-useEffect(() => {
-  if (!selectedNode) return;
-
-  let rootParent = null;
-
-  // ✅ CASE 1: selected node itself is root
-  if (selectedNode.level === 0) {
-    rootParent = selectedNode;
-  } 
-  // ✅ CASE 2: selected node is child / sub-child
-  else {
-    const findRoot = (nodes) => {
-      for (const node of nodes) {
-        if (node.children?.some(c => c.id === selectedNode.id)) {
-          return node;
-        }
-        const found = node.children && findRoot(node.children);
-        if (found) return found;
-      }
-      return null;
-    };
-
-    rootParent = findRoot(Store.treedata);
-  }
-
-  if (!rootParent?.name) return;
-
-  const collectionName = rootParent.name.toLowerCase(); // employee | patient | ecommerce
-
-  fetch(`http://localhost:4000/columns/${collectionName}`)
-    .then(res => res.json())
-    .then(keys => {
-      Store.columns = keys; // ✅ already array
-    })
-    .catch(err => console.error(err));
-
-}, [selectedNode]);
-
-//  useEffect(() => {
-//   if (!selectedNode) return;
-
-//   // 🔍 Find top-level parent (employee / patient / ecommerce)
-//   const rootParent = Store.treedata.find(root =>
-//     root.children?.some(child =>
-//       JSON.stringify(child).includes(selectedNode.id)
-//     )
-//   );
-
-//   if (!rootParent?.name) return;
-
-//   const collectionName = rootParent.name.toLowerCase(); // employee | patient | ecommerce
-
-//   fetch(`http://localhost:4000/columns/${collectionName}`)
-//     .then(res => res.json())
-//     .then(keys => {
-//       // ✅ Backend already returns keys array
-//       Store.columns = keys;
-//     })
-//     .catch(err => console.error(err));
-
-// }, [selectedNode]);
-
-
-
-
-  useEffect(() => {
-  if (!Store.selectedAttribute) return;
-
-  const field = encodeURIComponent(Store.selectedAttribute);
-
-  fetch(`http://localhost:4000/values/${field}`)
-    .then((res) => res.json())
-    .then((result) => {
-      let arr = [];
-
-      if (Array.isArray(result)) arr = result;
-      else if (result?.values) arr = result.values;
-
-      Store.selectedArray = arr;
-    })
-}, [Store.selectedAttribute]);
-
-const Tableselect = async() =>{
-
-  Store.isSidebarVisible1 = true;
-    Store.pop = "Parent";
-    await Store.fetchCollections();
-}
-
-
 
 const popupSections = {
 
@@ -154,34 +67,7 @@ const popupSections = {
       </div>
     </div>
   `,
-  // ConditionId: (row) => `
-  //   <div style="padding: 1rem 0.5rem;">
-  //     <div style="margin-bottom: 1.5rem;">
-  //       <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-align: left;">
-  //         Condition ID
-  //       </label>
-  //       <input 
-  //         id="condId" 
-  //         type="text"
-  //         placeholder="Enter Condition ID" 
-  //         value="${row.ConditionId || ""}"
-  //         style="
-  //           width: 100%;
-  //           padding: 0.75rem 1rem;
-  //           border: 2px solid #e2e8f0;
-  //           border-radius: 0.75rem;
-  //           font-size: 0.9375rem;
-  //           color: #1e293b;
-  //           background: #ffffff;
-  //           transition: all 0.2s ease;
-  //           outline: none;
-  //         "
-  //         onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
-  //         onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';"
-  //       />
-  //     </div>
-  //   </div>
-  // `,
+  
 
   SelectAttribute: (row) => `
     <div style="padding: 1rem 0.5rem;">
@@ -398,20 +284,42 @@ const popupSections = {
   `
 };
 
-const getConditionDropdownNumbers = (col) => {
-    
-    if (col.type === "rule") {
-  // For a rule directly under sub-child, return 1..number of ruleGroups
-  const taskLength = selectedNode?.ruleGroups?.length || 0;
-  return Array.from({ length: taskLength }, (_, i) => i + 1);
-} else if (col.type === "group") {
-  // Find this group inside selectedNode.ruleGroups
-  const targetGroup = selectedNode?.ruleGroups?.find((rg) => rg.id === col.id);
-  const taskLength = targetGroup?.rules?.length || 0;
-  return Array.from({ length: taskLength }, (_, i) => i + 1);
-}
+const getRootParent = (nodes, targetId) => {
+  const findPath = (nodes, targetId, path = []) => {
+    for (const node of nodes) {
+      const newPath = [...path, node];
 
+      if (node.id === targetId) return newPath;
+
+      if (node.children?.length) {
+        const result = findPath(node.children, targetId, newPath);
+        if (result) return result;
+      }
+    }
+    return null;
   };
+
+  const path = findPath(nodes, targetId);
+  return path?.[0] || null; // ✅ root parent
+};
+
+const getConditionDropdownNumbers = (col) => {
+  // If it's a direct rule, return numbers from 1 to the number of ruleGroups under selectedNode
+  if (col.type === "rule") {
+    const taskLength = selectedNode?.ruleGroups?.length || 0;
+    return Array.from({ length: taskLength }, (_, i) => i + 1);
+  } 
+  // If it's a group, return numbers from 1 to the number of tasks inside that group
+  else if (col.type === "group") {
+    const targetGroup = selectedNode?.ruleGroups?.find((rg) => rg.id === col.id);
+    const taskLength = targetGroup?.tasks?.length || 0; // ✅ tasks length
+    return Array.from({ length: taskLength }, (_, i) => i + 1);
+  }
+
+  // Default: return empty array if type is unknown
+  return [];
+};
+
 
 const editvalue = async (id, attribute,type,columnvalue) => {
 
@@ -421,12 +329,12 @@ const editvalue = async (id, attribute,type,columnvalue) => {
   {
     if(type === "rule")
     {
-      alert("rule")
+     
       value = getConditionDropdownNumbers(columnvalue);
       Store.conditionidvalue = value;
     }
     else{
-      alert("group")
+     
       value = getConditionDropdownNumbers(columnvalue);
       Store.conditionidvalue = value;
     }
@@ -434,58 +342,33 @@ const editvalue = async (id, attribute,type,columnvalue) => {
   }
 
  
-// Find the specific task
-if (!selectedNode || selectedNode.level !== 2) return;
+
+
+
 
 let taskToEdit = null;
 
-
-
+// 3️⃣ Search for the task inside ruleGroups
 selectedNode.ruleGroups?.forEach((rg) => {
-  // ✅ GROUP → search inside tasks
-  
-    const foundInGroup = rg.tasks?.find((t) => t.id === id);
-    if (foundInGroup) taskToEdit = foundInGroup;
-  
-
-  // ✅ DIRECT RULE
-  // if (rg.type === "rule" && rg.id === id) {
-  //   const foundInGroup = rg.tasks?.find((t) => t.id === id);
-  //   if (foundInGroup) taskToEdit = foundInGroup;
-  // }
+  // Look for the task inside the tasks array of each group or rule
+  const foundTask = rg.tasks?.find((t) => t.id === id);
+  if (foundTask) taskToEdit = foundTask;
 });
-
-
 
 
 if (!taskToEdit) return;
 
+// 5️⃣ Prepare an object with the task's current values
 const row = {};
-let oldSelectAttribute = "";
 
-// Copy task values into row and get old SelectAttribute
+
 Object.entries(taskToEdit).forEach(([key, value]) => {
   row[key] = value;
-  if (key === "SelectAttribute") oldSelectAttribute = value;
+  
 });
 
-// Determine new value
-let newValue = "";
-
-// When user edits SelectAttribute
-if (attribute === "SelectAttribute") {
-  newValue =
-    document.getElementById("SelectAttributeTrigger")
-      ?.getAttribute("data-value") || "";
-}
 
 
-
-
-  // // If attribute unknown, fallback to ConditionId
-  // if (!popupSections[attribute]) attribute = "ConditionId";
-
-  // Build full HTML with styles (keeps your original style block)
   const html = `
     <div style="padding: 0;">
       ${popupSections[attribute](row)}
@@ -556,67 +439,55 @@ if (attribute === "SelectAttribute") {
 
 
 
-          // If fetchOnOpen is true (SelectValue), compute values based on SelectAttribute
+         
           if (fetchOnOpen && !isOpen) {
-            // Determine selected attribute
-    //         let selectedAttr =
-    // document.getElementById("SelectAttributeTrigger")?.getAttribute("data-value") ||
-    // "";
 
-  // 2️⃣ Fallback to Store.columns if UI has nothing
+
+
+
+
+            // -----------------------------SelectValue--------------------------------------------------
+
+            const findTaskById = (nodes, taskId) => {
+  for (const node of nodes) {
+
+    // only nodes that have ruleGroups
+    if (node.ruleGroups?.length) {
+      for (const rg of node.ruleGroups) {
+        const task = rg.tasks?.find(t => t.id === taskId);
+        if (task) return task;
+      }
+    }
+
+    // search children
+    if (node.children?.length) {
+      const found = findTaskById(node.children, taskId);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+// 3️⃣ get the task
+const task = findTaskById(Store.treedata, id);
+
+if (!task) {
+  console.error("❌ Task not found");
+  return;
+}
+
+// 4️⃣ get SelectAttribute
+const selectAttribute = task.SelectAttribute;
+
+
+
+
+const rootParent = getRootParent(Store.treedata, selectedNode.id);
+
+const collectionName = rootParent?.name?.toLowerCase(); 
   
-
-   // Find the column that contains the clicked task
-if (!selectedNode || selectedNode.level !== 2) return;
-
-// 1️⃣ Find ONLY the task that was clicked
-let selectedTask = null;
-
-(selectedNode.ruleGroups || []).forEach((rg) => {
-  // ✅ GROUP → find rule inside tasks[]
-  if (rg.type === "group") {
-    const taskInGroup = (rg.tasks || []).find((t) => t.id === id);
-    if (taskInGroup) selectedTask = taskInGroup;
-  }
-
-  // ✅ DIRECT RULE → tasks[0]
-  if (rg.type === "rule") {
-    const task = (rg.tasks || []).find((t) => t.id === id);
-    if (task) selectedTask = task;
-  }
-});
-
-
-if (!selectedTask) return; // task not found
-
-// // 2️⃣ Now you can do exactly what you were doing
-// Object.keys(formValues).forEach((label) => {
-//   const value = formValues[label];
-//   if (value !== null && value !== undefined && value !== "")
-//     selectedTask[label] = value;
-// });
-
-
-if (!selectedTask) return;
-
-// 2️⃣ Use only this task's SelectAttribute
-if (selectedTask.SelectAttribute) {
-  Store.selectedvalue = selectedTask.SelectAttribute;
-  alert(Store.selectedvalue);   // ✅ only one alert now
-}
-
-// 3️⃣ Auto-reset SelectValue only for this task
-if (
-  selectedTask.SelectValue &&
-  newValue !== oldSelectAttribute
-) {
-  selectedTask.SelectValue = "Edit SelectValue";
-}
-
-
-            // fetch values (your original fetch logic)
             try {
-              const res = await fetch(`http://localhost:4000/values/${encodeURIComponent(Store.selectedvalue)}`);
+              const res = await fetch(`http://localhost:4000/values/${collectionName}/${encodeURIComponent(selectAttribute)}`);
               const result = await res.json();
               let arr = [];
               if (Array.isArray(result)) arr = result;
@@ -670,7 +541,8 @@ if (
         });
       };
 
-      // 🔥 Rebuild ConditionId list fresh every time popup opens
+      // -----------------------------ConditionId--------------------------------------------------
+
 const conditionList = document.getElementById("ConditionIdList");
 
 if (conditionList) {
@@ -689,6 +561,63 @@ if (conditionList) {
     : `<div style="padding:10px; color:#94a3b8">No values found</div>`;
 }
 
+
+
+// -----------------------------SelectAttribute--------------------------------------------------
+
+const selectAttributeList = document.getElementById("SelectAttributeList");
+
+if (selectAttributeList) {
+
+  if (!selectedNode) return;
+
+  // 🔍 Find path from root to selected node
+  const findPath = (nodes, targetId, path = []) => {
+    for (const node of nodes) {
+      const newPath = [...path, node];
+
+      if (node.id === targetId) return newPath;
+
+      if (node.children?.length) {
+        const result = findPath(node.children, targetId, newPath);
+        if (result) return result;
+      }
+    }
+    return null;
+  };
+
+  const path = findPath(Store.treedata, selectedNode.id);
+
+  // ✅ Root is always the first node in the path
+  const rootParent = path?.[0];
+
+  if (!rootParent?.name) return;
+
+  const collectionName = rootParent.name.toLowerCase(); // employee | patient | ecommerce
+
+  fetch(`http://localhost:4000/columns/${collectionName}`)
+    .then(res => res.json())
+    .then(keys => {
+      Store.columns = keys;
+    })
+    .catch(err => console.error(err));
+  const arr = Store.columns || [];
+
+  selectAttributeList.innerHTML = arr.length
+    ? arr
+        .map(
+          (v) => `
+      <div class="dropdown-option" data-value="${v}"
+           style="padding:.75rem 1rem; cursor:pointer; color:#334155">
+          ${v}
+      </div>`
+        )
+        .join("")
+    : `<div style="padding:10px; color:#94a3b8">No values found</div>`;
+}
+
+
+//-----------------------------------------------------------------------Dropdowns Attachments--------------------------------------------------  
 
       if (document.getElementById("ConditionIdTrigger")) {
         // fetchOnOpen = true so it loads based on SelectAttribute
@@ -745,70 +674,91 @@ flagSwitch?.addEventListener("change", () => {
   });
 
    if (!formValues) return;
-// 1️⃣ Find the parent (selectedNode) that contains this task
-if (!selectedNode || selectedNode.level !== 2) return;
+if (!formValues) return;
+  if (!selectedNode || selectedNode.level !== 2) return;
 
-// 2️⃣ Build new updated ruleGroups array
-const updatedRuleGroups = (selectedNode.ruleGroups || []).map((rg) => {
-  // ✅ GROUP → update rule inside tasks[]
-  if (rg.type === "group") {
-    return {
-      ...rg,
-      tasks: (rg.tasks || []).map((task) => {
-        if (task.id !== id) return task;
-
-        const updatedTask = { ...task };
-        Object.keys(formValues).forEach((label) => {
-          const value = formValues[label];
-          if (value !== null && value !== undefined && value !== "") {
-            updatedTask[label] = value;
-          }
-        });
-
-        return updatedTask;
-      }),
-    };
-  }
-
-  // ✅ DIRECT RULE → single task inside tasks[0]
-  if (rg.type === "rule") {
-    return {
-      ...rg,
-      tasks: (rg.tasks || []).map((task) => {
-        if (task.id !== id) return task;
-
-        const updatedTask = { ...task };
-        Object.keys(formValues).forEach((label) => {
-          const value = formValues[label];
-          if (value !== null && value !== undefined && value !== "") {
-            updatedTask[label] = value;
-          }
-        });
-
-        return updatedTask;
-      }),
-    };
-  }
-
-  return rg;
-});
-
-
-// 3️⃣ Update tree immutably
-const updateTree = (nodes) =>
-  nodes.map((n) => {
-    if (n.id === selectedNode.id) {
-      return { ...n, ruleGroups: updatedRuleGroups };
+  // 🔍 Helper: find node by id (USED AFTER TREE UPDATE)
+  const findNodeById = (nodes, targetId) => {
+    for (const node of nodes) {
+      if (node.id === targetId) return node;
+      if (node.children?.length) {
+        const found = findNodeById(node.children, targetId);
+        if (found) return found;
+      }
     }
-    if (n.children?.length) return { ...n, children: updateTree(n.children) };
-    return n;
+    return null;
+  };
+
+  // 🔁 Step 1: Build updated ruleGroups (IMMUTABLE)
+  const updatedRuleGroups = (selectedNode.ruleGroups || []).map((rg) => {
+    // ✅ GROUP
+    if (rg.type === "group") {
+      return {
+        ...rg,
+        tasks: (rg.tasks || []).map((task) => {
+          if (task.id !== id) return task;
+
+          const updatedTask = { ...task };
+          Object.keys(formValues).forEach((label) => {
+            const value = formValues[label];
+            if (value !== null && value !== undefined && value !== "") {
+              updatedTask[label] = value;
+            }
+          });
+
+          return updatedTask;
+        }),
+      };
+    }
+
+    // ✅ DIRECT RULE
+    if (rg.type === "rule") {
+      return {
+        ...rg,
+        tasks: (rg.tasks || []).map((task) => {
+          if (task.id !== id) return task;
+
+          const updatedTask = { ...task };
+          Object.keys(formValues).forEach((label) => {
+            const value = formValues[label];
+            if (value !== null && value !== undefined && value !== "") {
+              updatedTask[label] = value;
+            }
+          });
+
+          return updatedTask;
+        }),
+      };
+    }
+
+    return rg;
   });
 
-// 4️⃣ Save updated tree in MobX
-Store.setTreedata(updateTree(Store.treedata));
+  // 🔁 Step 2: Update tree immutably
+  const updateTree = (nodes) =>
+    nodes.map((n) => {
+      if (n.id === selectedNode.id) {
+        return { ...n, ruleGroups: updatedRuleGroups };
+      }
+      if (n.children?.length) {
+        return { ...n, children: updateTree(n.children) };
+      }
+      return n;
+    });
 
+  // 🌳 Step 3: Save updated tree to MobX
+  const newTree = updateTree(Store.treedata);
+  Store.setTreedata(newTree);
 
-Store.selectedvalue = "" ;
+  // 🔄 Step 4: VERY IMPORTANT — re-set selectedNode
+  const updatedSelectedNode = findNodeById(newTree, selectedNode.id);
+  if (updatedSelectedNode) {
+    setSelectedNode(updatedSelectedNode);
+    // OR: Store.setSelectedNode(updatedSelectedNode);
+  }
+
+  // 🧹 Cleanup
+  Store.selectedvalue = "";
 
   
 };
@@ -893,15 +843,20 @@ const deleteGroup = async (groupId) => {
 
   if (!result.isConfirmed) return;
 
+  let updatedSelectedNode = null;
+
   const updateTree = (nodes) =>
     nodes.map((n) => {
       if (n.id === selectedNode.id) {
-        return {
+        const updatedNode = {
           ...n,
-          ruleGroups: n.ruleGroups.filter(
+          ruleGroups: (n.ruleGroups || []).filter(
             (rg) => rg.id !== groupId
           ),
         };
+
+        updatedSelectedNode = updatedNode; // 🔥 capture fresh reference
+        return updatedNode;
       }
 
       if (n.children?.length) {
@@ -911,7 +866,14 @@ const deleteGroup = async (groupId) => {
       return n;
     });
 
-  Store.setTreedata(updateTree(Store.treedata));
+  const newTree = updateTree(Store.treedata);
+
+  Store.setTreedata(newTree);
+
+  // 🔥 IMPORTANT: refresh selectedNode
+  if (updatedSelectedNode) {
+    setSelectedNode(updatedSelectedNode);
+  }
 
   Swal.fire({
     title: "Deleted!",
@@ -943,16 +905,14 @@ const deleteGroup = async (groupId) => {
 
   const updateTree = (nodes) =>
     nodes.map((n) => {
-      // 🎯 Match selected sub-child node
       if (n.id === selectedNode.id) {
         return {
           ...n,
-          ruleGroups: n.ruleGroups.map((rg) => {
-            // 🎯 Match group
+          ruleGroups: (n.ruleGroups || []).map((rg) => {
             if (rg.id === groupId && rg.type === "group") {
               return {
                 ...rg,
-                tasks: [...(rg.tasks || []), newRule], // ✅ ADD HERE
+                tasks: [...(rg.tasks || []), newRule], // ✅ correct place
               };
             }
             return rg;
@@ -960,7 +920,6 @@ const deleteGroup = async (groupId) => {
         };
       }
 
-      // 🔁 Recurse children
       if (n.children?.length) {
         return { ...n, children: updateTree(n.children) };
       }
@@ -968,16 +927,35 @@ const deleteGroup = async (groupId) => {
       return n;
     });
 
-  Store.setTreedata(updateTree(Store.treedata));
+  // 1️⃣ Create new tree
+  const newTree = updateTree(Store.treedata);
 
+  // 2️⃣ Update MobX
+  Store.setTreedata(newTree);
+
+  // 3️⃣ 🔥 IMPORTANT: refresh selectedNode reference
+  const refreshedNode = findNodeById(newTree, selectedNode.id);
+  setSelectedNode(refreshedNode);
+
+  // 4️⃣ Counters
   setGlobalId((id) => id + 1);
   setRuleCounter((n) => n + 1);
 
-  console.log(
-    "Updated Tree:",
-    JSON.stringify(Store.treedata, null, 2)
-  );
+  console.log("Updated Tree:", JSON.stringify(newTree, null, 2));
 };
+
+const findNodeById = (nodes, id) => {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children?.length) {
+      const found = findNodeById(n.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+
 
 
 
@@ -1065,17 +1043,22 @@ const popupVisible = () => {
   const toggleCollapse = (groupId) => {
   if (!selectedNode || selectedNode.level !== 2) return;
 
+  let updatedSelectedNode = null;
+
   const updateTree = (nodes) =>
     nodes.map((n) => {
       if (n.id === selectedNode.id) {
-        return {
+        const updatedNode = {
           ...n,
-          ruleGroups: n.ruleGroups.map((rg) =>
+          ruleGroups: (n.ruleGroups || []).map((rg) =>
             rg.id === groupId
               ? { ...rg, collapsed: !rg.collapsed }
               : rg
           ),
         };
+
+        updatedSelectedNode = updatedNode; // 🔥 capture fresh ref
+        return updatedNode;
       }
 
       if (n.children?.length) {
@@ -1085,8 +1068,15 @@ const popupVisible = () => {
       return n;
     });
 
-  Store.setTreedata(updateTree(Store.treedata));
+  const newTree = updateTree(Store.treedata);
+  Store.setTreedata(newTree);
+
+  // 🔥 CRITICAL: update selectedNode reference
+  if (updatedSelectedNode) {
+    setSelectedNode(updatedSelectedNode);
+  }
 };
+
 
 
     return (
@@ -1272,7 +1262,7 @@ const popupVisible = () => {
           }}
         >
           
-{selectedNode?.level === 2 && (
+{selectedNode && (
   <SortableContext
     items={(selectedNode.ruleGroups || []).map((c) => c.id)}
     strategy={verticalListSortingStrategy}
@@ -1293,11 +1283,15 @@ const popupVisible = () => {
           deleteGroup={deleteGroup}
           toggleCollapse={toggleCollapse}
           selectedNode={selectedNode}
+          setSelectedNode={setSelectedNode}
         />
       </SortableContext>
     ))}
   </SortableContext>
 )}
+
+  
+
 
 
 

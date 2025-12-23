@@ -14,7 +14,7 @@ import { useState } from "react";
 import { MdEdit } from "react-icons/md";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import Swal from "sweetalert2";
-export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse ,editvalue,selectedNode}) => {
+export const Columndata = observer(({ column, addRuleInsideGroup,handleDeleteRule={handleDeleteRule},deleteGroup ,toggleCollapse ,editvalue,selectedNode,setSelectedNode}) => {
 
 const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -66,9 +66,6 @@ const popupSections = {
             };
 
             const getConditionDropdownNumbers = () => {
-    
-    
-      
       
       if (!selectedNode) return [];
 
@@ -81,7 +78,7 @@ return Array.from({ length: count }, (_, i) => i + 1);
 
             const editCondition = async (id) => {
 
-              alert(id)
+      alert("Edit Condition clicked for column ID: " + id);
 
       var value;
       value = getConditionDropdownNumbers();
@@ -94,11 +91,7 @@ if (!selectedNode) return;
 
 // Find the column (rule or group) inside selectedNode.ruleGroups
 const column = selectedNode.ruleGroups.find((rg) => rg.id === id);
-
-if (!column) return;
-
-// Now you can safely update it
-
+alert(column.id);
 
 if (!column) return;
 
@@ -235,38 +228,45 @@ if (conditionList) {
       };
     }
   });
+if (!formValues || !selectedNode) return;
 
-   if (!formValues) return;
+const updatedRuleGroups = selectedNode.ruleGroups.map((rg) =>
+  rg.id === id
+    ? { ...rg, condition: formValues.ConditionId }
+    : rg
+);
 
-    if (!formValues) return;
-if (!selectedNode) return;
-
-// 1️⃣ Update the rule or group inside selectedNode.ruleGroups
-const updatedRuleGroups = selectedNode.ruleGroups.map((rg) => {
-  if (rg.id === id) {
-    return {
-      ...rg,
-      condition: formValues.ConditionId, // ✅ Save selected dropdown value
-    };
-  }
-  return rg;
-});
-
-// 2️⃣ Update the tree immutably
 const updateTree = (nodes) =>
   nodes.map((n) => {
     if (n.id === selectedNode.id) {
       return { ...n, ruleGroups: updatedRuleGroups };
     }
-    if (n.children?.length) return { ...n, children: updateTree(n.children) };
+    if (n.children?.length) {
+      return { ...n, children: updateTree(n.children) };
+    }
     return n;
   });
 
-// 3️⃣ Save updated tree in MobX
-Store.setTreedata(updateTree(Store.treedata));
+const newTree = updateTree(Store.treedata);
+Store.setTreedata(newTree);
+
+const updatedNode = findNodeById(newTree, selectedNode.id);
+setSelectedNode(updatedNode);
 
 
 };
+
+const findNodeById = (nodes, id) => {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children?.length) {
+      const found = findNodeById(n.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
 
 
   const editGroupName = async (columnId) => {
@@ -281,33 +281,41 @@ Store.setTreedata(updateTree(Store.treedata));
     confirmButtonColor: "#2563eb",
     cancelButtonColor: "#64748b",
     inputValidator: (value) => {
-      if (!value) {
-        return "Please enter a group name!";
-      }
-      if (value.trim().length < 3) {
+      if (!value) return "Please enter a group name!";
+      if (value.trim().length < 3)
         return "Group name should have at least 3 characters!";
-      }
     },
   });
 
- 
   if (Name && selectedNode) {
-     const updateTree = (nodes) =>
-    nodes.map((n) => {
-      if (n.id === selectedNode.id) {
-        return {
-          ...n,
-          ruleGroups: n.ruleGroups.map((rg) =>
-            rg.id === columnId ? { ...rg, name: Name.trim() } : rg
-          ),
-        };
-      }
+    const updateTree = (nodes) =>
+      nodes.map((n) => {
+        if (n.id === selectedNode.id) {
+          return {
+            ...n,
+            ruleGroups: n.ruleGroups.map((rg) =>
+              rg.id === columnId ? { ...rg, name: Name.trim() } : rg
+            ),
+          };
+        }
 
-      if (n.children?.length) return { ...n, children: updateTree(n.children) };
-      return n;
+        if (n.children?.length) return { ...n, children: updateTree(n.children) };
+        return n;
+      });
+
+    // ✅ Update the tree data
+    Store.setTreedata(updateTree(Store.treedata));
+
+    // 🔄 ALSO update selectedNode so UI reflects immediately
+    setSelectedNode((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        ruleGroups: prev.ruleGroups.map((rg) =>
+          rg.id === columnId ? { ...rg, name: Name.trim() } : rg
+        ),
+      };
     });
-
-  Store.setTreedata(updateTree(Store.treedata));
 
     // ✅ Success message
     Swal.fire({
@@ -318,6 +326,7 @@ Store.setTreedata(updateTree(Store.treedata));
     });
   }
 };
+
 
 
 
