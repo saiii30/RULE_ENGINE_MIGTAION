@@ -96,7 +96,7 @@ useEffect(() => {
 
     
          if (value !== "rule") return;
-    if (!selectedNode || selectedNode.level !== 2) return;
+    if (!selectedNode || selectedNode.level !== 1) return;
           
          
           const newRule = {
@@ -130,7 +130,7 @@ const handlePopupSelect = (label) => {
   if (!selectedNode) return;
 
   // Stop adding children to level 2
-  if (selectedNode.level === 2) {
+  if (selectedNode.level === 1) {
     setPopupOpen(false);
     return;
   }
@@ -141,7 +141,7 @@ const handlePopupSelect = (label) => {
     children: [],
     isOpen: true,
     level: selectedNode.level + 1,
-    ruleGroups: selectedNode.level + 1 === 2 ? [] : undefined,
+    ruleGroups: selectedNode.level + 1 === 1 ? [] : undefined,
   };
 
   const updateTree = (nodes) => {
@@ -235,7 +235,7 @@ const findNodeById = (nodes, id) => {
 
   const handleAddGroup = async () => {
 
-     if (!selectedNode || selectedNode.level !== 2) return;
+     if (!selectedNode || selectedNode.level !== 1) return;
       // 🧠 Ask user for the group name
       const { value: groupName } = await Swal.fire({
         title: `<div style="color:#1e293b; font-weight:700; font-size:1.3rem;">Create New Group</div>`,
