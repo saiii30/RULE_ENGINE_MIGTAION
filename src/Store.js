@@ -30,7 +30,6 @@ const Store = observable({
   visible5 : false,
   isLoggedIn : false,
   parentId : "",
-  conditionidvalue : [],
   menudrop : false,
   open: false,
   showDataPopup: false,
@@ -547,10 +546,6 @@ getNextEngineY() {
   return this.engineBaseY + (this.engines?.length || 0) * this.engineDY;
 },
 
-makeConditionSetId() {
-  return `condSet_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
-},
-
 //////////////////for groupname and new rule id req/////////
 // helper: return next Rule label and advance counter
 getNextRuleLabel() {
@@ -611,7 +606,6 @@ initGlobalRuleCounter() {
 
 createRuleEngineNodes(choice, collectionName,groupNameInput = null) {
   const labels = [
-    "ConditionSetId",
     "RuleId",
     "SelectAttribute",
     "Condition",
@@ -657,9 +651,7 @@ if (choice === "group") {
 
   const newNodes = labels.map((label, i) => {
     let value = "";
-    if (label === "ConditionSetId") {
-      value = this.makeConditionSetId(); // always unique
-    } else if (label === "RuleId") {
+    if (label === "RuleId") {
       value = ruleName;
     }
 
@@ -729,12 +721,6 @@ finalizeRuleOrGroup(type) {
     alert("Group created successfully ✅");
   }
 },
-//////for new rule group creation conditionsetid unique/////
-// Generate unique ConditionSetId
-makeConditionSetId() {
-  return `condSet_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
-},
-
 // Generate unique RuleId (different per rule/group)
 makeRuleId(groupName = null) {
   // If groupName is provided, all rules in same group get same RuleId
@@ -752,7 +738,6 @@ startNewRuleEngine(collectionName, type = "rule", groupName = null) {
   // decide Y row for this engine
   const rowY = this.getNextEngineY();
   const labels = [
-    "ConditionSetId",
     "RuleId",
     "Select Attribute",
     "Condition",
@@ -778,11 +763,9 @@ if (groupName) {
   
 
   labels.forEach((label, index) => {
-    // assign node value line for ConditionSetId / RuleId
+    // assign node value line for RuleId
     let value = "";
-    if (label === "ConditionSetId") {
-      value = this.makeConditionSetId(); // always unique
-    } else if (label === "RuleId") {
+    if (label === "RuleId") {
       value = ruleName; // Rule 1 / Rule 2 etc, or reused inside group
     }
 
@@ -945,7 +928,6 @@ computeRulesFromGraph(nodes, engines) {
 
   const labelEq = (n, lbls) => lbls.includes(n?.data?.label);
   const L = {
-    cs: ["ConditionSetId"],
     ri: ["RuleId"],
     sa: ["SelectAttribute", "Select Attribute"],
     co: ["Condition"],
@@ -957,8 +939,7 @@ computeRulesFromGraph(nodes, engines) {
     const parts = { };
     for (const id of eng.nodes || []) {
       const n = byId.get(id);
-      if (labelEq(n, L.cs)) parts.conditionSetId = n?.data?.value;
-      else if (labelEq(n, L.ri)) parts.ruleId = n?.data?.value;
+      if (labelEq(n, L.ri)) parts.ruleId = n?.data?.value;
       else if (labelEq(n, L.sa)) {
         parts.attribute = n?.data?.selectedColumn || n?.data?.label1 || null;
         parts.attrType = n?.data?.type || null;
@@ -1175,10 +1156,8 @@ convertSnapshotToCSV: () => {
 
     // Insert count BEFORE RuleId
     const orderedTask = {
-      ConditionSetId: t.ConditionSetId,
-      Count: groupCount,          // 👈 INSERTED HERE
+      Count: groupCount,
       RuleId: t.RuleId,
-      ConditionId: t.ConditionId,
       SelectAttribute: t.SelectAttribute,
       Condition: t.Condition,
       SelectValue: t.SelectValue,

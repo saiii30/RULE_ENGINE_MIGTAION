@@ -4,7 +4,7 @@
     box-shadow: rgb(0, 0, 0,0.16) 0px 1px 4px; */
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     touch-action: none;
     box-sizing: border-box;
     padding: 9px;
@@ -17,7 +17,7 @@
     box-shadow: rgb(0, 0, 0,0.16) 0px 1px 4px; */
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     
     touch-action: none;
     box-sizing: border-box;

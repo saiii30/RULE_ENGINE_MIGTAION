@@ -108,16 +108,12 @@ useEffect(() => {
     tasks: [
       {
         id: `task-${globalId}`,
-        ConditionSetId: `ConditionSetId${globalId}`,
         RuleId: `RuleId${ruleCounter}`,
-
-        ConditionId: "Edit ConditionId",
         SelectAttribute: "Edit SelectAttribute",
         Condition: "Edit Condition",
         SelectValue: "Edit Value",
         Flag: "Edit Flag",
         Actions: "Edit Actions",
-        // ruleorgroup: "rule",
       },
     ],
   };
@@ -275,9 +271,7 @@ const findNodeById = (nodes, id) => {
   tasks: [
     {
       id: `task-${globalId}`,
-      ConditionSetId: `ConditionSetId${globalId}`,
       RuleId: `RuleId${ruleCounter}`,
-      ConditionId: "Edit ConditionId",
       SelectAttribute: "Edit SelectAttribute",
       Condition: "Edit Condition",
       SelectValue: "Edit Value",

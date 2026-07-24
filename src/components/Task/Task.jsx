@@ -11,9 +11,7 @@ import Store from "../../Store";
 export const Task = observer(({
   id,
   editvalue,
-  ConditionSetId,
   RuleId,
-  ConditionId,
   SelectAttribute,
   Condition,
   SelectValue,
@@ -71,30 +69,18 @@ const fetchDropdownValues = async (rowIndex) => {
   return (
     <div className={column === "rule" ? "task" : "task1"} style={{position : "relative"}}>
       
-      {/* Grip + ConditionSetId */}
+      {/* Grip + RuleId combined */}
       {column === "rule" ? (
-        <div style={style} ref={sortableProps.setNodeRef} {...sortableProps.attributes} {...sortableProps.listeners} className="set">
+        <div style={{...style, display: "flex", alignItems: "center", gap: "8px"}} ref={sortableProps.setNodeRef} {...sortableProps.attributes} {...sortableProps.listeners} className="set">
           <GripVertical size={18} />
-          <div>{ConditionSetId}</div>
+          <div>{RuleId}</div>
         </div>
       ) : (
-        <div style={style} {...attributes} {...listeners} ref={setNodeRef} className="set">
+        <div style={{...style, display: "flex", alignItems: "center", gap: "8px"}} {...attributes} {...listeners} ref={setNodeRef} className="set">
           <GripVertical size={18} />
-          <div>{ConditionSetId}</div>
+          <div>{RuleId}</div>
         </div>
       )}
-
-      <div>{RuleId}</div>
-
-      {/* ConditionId clickable with dropdown */}
-      <div style={{ position: "relative"}}>
-        <div
-          onClick={() => editvalue(id, "ConditionId",column,columnvalue)}
-          style={{ cursor: "pointer", color: "blue", textDecoration: "underline", width: "120px" }}
-        >
-          {ConditionId || "Edit Condition"}
-        </div>
-      </div>
 
       <a onClick={() => editvalue(id,"SelectAttribute")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{SelectAttribute}</a>
       <a onClick={() => editvalue(id,"Condition")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{Condition}</a>
@@ -105,7 +91,7 @@ const fetchDropdownValues = async (rowIndex) => {
         {SelectValue}
       </a>
       <a onClick={() => editvalue(id,"Flag")} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{Flag}</a>
-      <a style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }} onClick={() => Store.setShowDataPopup(true)}>{Actions}</a>
+      <a onClick={() => editvalue(id,"Actions",column,columnvalue)} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{Actions}</a>
 
       <div className="actions">
   <button
